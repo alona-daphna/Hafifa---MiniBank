@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MiniBank.Models
 {
-    internal class SimpleAccount(string ownerID) : Account(ownerID)
+    internal class SimpleAccount : Account
     {
         public override void Withdraw(float amount)
         {
-            if (Amount - amount < 0)
+            if (Balance - amount < 0)
             {
                 throw new ArgumentException("This account cannot be in overdraft");
             }

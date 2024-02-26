@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace MiniBank.Models
 {
-    internal abstract class Account(string ownerID)
+    internal abstract class Account()
     {
-        protected string ID { get; set; } = Guid.NewGuid().ToString();
-        protected float Amount { get; set; } = 0;
-        protected string OwnerID { get; set; } = ownerID;
+        internal string ID { get; set; }
+        internal float Balance { get; set; }
+        internal string OwnerID { get; set; }
 
         public void Deposit(float amount) 
         {
             EnsureAmountPositive(amount);
-            Amount += amount;
+            Balance += amount;
         }
         public virtual void Withdraw(float amount) 
         { 
             EnsureAmountPositive(amount);
-            Amount -= amount;
+            Balance -= amount;
         }
 
         private void EnsureAmountPositive(float amount)

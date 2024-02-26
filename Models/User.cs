@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace MiniBank.Models
 {
-    internal class User(string name)
+    internal class User
     {
-        private string ID { get; set; } = Guid.NewGuid().ToString();
-        private string Name { get; set; } = name;
+        internal string ID { get; set; }
+        internal string Name { get; set; }
     }
 }

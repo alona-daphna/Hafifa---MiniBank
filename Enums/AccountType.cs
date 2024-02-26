@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MiniBank.Models
+namespace MiniBank.Enums
 {
-    internal class VipAccount : Account
+    internal enum AccountType
     {
+        Simple = 1,
+        Vip
     }
 }
