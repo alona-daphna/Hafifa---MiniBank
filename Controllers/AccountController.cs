@@ -38,7 +38,7 @@ namespace MiniBank.Controllers
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            var command = new SqlCommand("SELECT ID, Name FROM Accounts WHERE ID = @ID", conn);
+            var command = new SqlCommand("SELECT ID, Balance, OwnerID, Type FROM Accounts WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", id);
 
             using var reader = command.ExecuteReader();
@@ -84,7 +84,7 @@ namespace MiniBank.Controllers
         internal void Deposit(string ownerId, string accountId, float amount)
         {
             var account = GetByID(accountId);
-            AuthorizeAccountOwner(ownerId, account.ID);
+            AuthorizeAccountOwner(ownerId, account.OwnerID);
             account.Deposit(amount);
             UpdateBalance(accountId, account.Balance);
         }
@@ -92,7 +92,7 @@ namespace MiniBank.Controllers
         internal void Withdraw(string ownerId, string accountId, float amount)
         {
             var account = GetByID(accountId);
-            AuthorizeAccountOwner(ownerId, account.ID);
+            AuthorizeAccountOwner(ownerId, account.OwnerID);
             account.Withdraw(amount);
             UpdateBalance(accountId, account.Balance);
         }
@@ -111,8 +111,8 @@ namespace MiniBank.Controllers
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            using var command = new SqlCommand("UPDATE Accounts SET Balance = @updatedBalance WHERE ID = @AccountID", conn);
-            command.Parameters.AddWithValue("updatedBalance", updatedBalance);
+            using var command = new SqlCommand("UPDATE Accounts SET Balance = @UpdatedBalance WHERE ID = @AccountID", conn);
+            command.Parameters.AddWithValue("UpdatedBalance", updatedBalance);
             command.Parameters.AddWithValue("AccountID", accountId);
 
             command.ExecuteNonQuery();

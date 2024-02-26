@@ -64,7 +64,7 @@ namespace MiniBank.Controllers
         }
 
 
-        internal User GetById(string id) 
+        internal User GetByID(string id) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
