@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Data.SqlClient
+using Microsoft.Data.SqlClient;
 
 using System.Data;
 
@@ -8,9 +8,10 @@ namespace MiniBank
     internal class DBConnection
     {
         private string ConnectionString { get; set; }
-        internal DBConnection(IConfiguration configuration)
+
+        public DBConnection()
         {
-            ConnectionString = configuration.GetConnectionString("DB");
+            ConnectionString = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetConnectionString("DB") ?? throw new Exception("Can't find connection string.");
         }
 
         internal IDbConnection GetConnection() => new SqlConnection(ConnectionString);
