@@ -32,6 +32,23 @@ namespace MiniBank.Controllers
             }
 
             return accounts;
+        }       
+        internal Account GetByID(string id)
+        {
+            using var conn = DBConnection.GetConnection();
+            conn.Open();
+
+            var command = new SqlCommand("SELECT ID, Name FROM Accounts WHERE ID = @ID", conn);
+            command.Parameters.AddWithValue("ID", id);
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                return AccountConverter.Convert(reader);
+            }
+
+            throw new ArgumentException("Account not found");
         }
 
         internal void Delete(string ownerId, string accountId)
@@ -64,30 +81,41 @@ namespace MiniBank.Controllers
             return id;
         }
 
-        internal void Deposit(string ownerId, string accountId, float amount) =>
-            UpdateBalance(ownerId, accountId, amount, "Deposit");
+        internal void Deposit(string ownerId, string accountId, float amount)
+        {
+            var account = GetByID(accountId);
+            AuthorizeAccountOwner(ownerId, account.ID);
+            account.Deposit(amount);
+            UpdateBalance(accountId, account.Balance);
+        }
 
-        internal void Withdraw(string ownerId, string accountId, float amount) =>
-            UpdateBalance(ownerId, accountId, amount, "Withdraw");
+        internal void Withdraw(string ownerId, string accountId, float amount)
+        {
+            var account = GetByID(accountId);
+            AuthorizeAccountOwner(ownerId, account.ID);
+            account.Withdraw(amount);
+            UpdateBalance(accountId, account.Balance);
+        }
 
-        private void UpdateBalance(string ownerId, string accountId, float amount, string operation)
+        private void AuthorizeAccountOwner(string requestingOwnerId, string actualOwnerId)
+        {
+            if (requestingOwnerId != actualOwnerId)
+            {
+                throw new UnauthorizedAccessException("Unauthorized");
+            }
+        }
+        
+
+        private void UpdateBalance(string accountId, float updatedBalance)
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            var commandText = 
-                operation == "Deposit" 
-                ? "UPDATE Accounts SET Balance += @Amount WHERE OwnerID = @OwnerID AND ID = @AccountID" 
-                : "UPDATE Accounts SET Balance -= @Amount WHERE OwnerID = @OwnerID AND ID = @AccountID";
-
-            using var command = new SqlCommand(commandText, conn);
-            command.Parameters.AddWithValue("Amount", amount);
-            command.Parameters.AddWithValue("OwnerID", ownerId);
+            using var command = new SqlCommand("UPDATE Accounts SET Balance = @updatedBalance WHERE ID = @AccountID", conn);
+            command.Parameters.AddWithValue("updatedBalance", updatedBalance);
             command.Parameters.AddWithValue("AccountID", accountId);
 
-            var affectedRows = command.ExecuteNonQuery();
-
-            if (affectedRows == 0) throw new ArgumentException($"Account with this ID does not exist for this user or the operation failed.");
+            command.ExecuteNonQuery();
         }
     }
 }
