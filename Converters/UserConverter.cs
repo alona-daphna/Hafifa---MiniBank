@@ -1,6 +1,7 @@
 ﻿using MiniBank.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
@@ -10,14 +11,14 @@ namespace MiniBank.Converters
 {
     internal class UserConverter
     {
-        internal User Convert(DbDataReader dataReader)
+        internal User Convert(IDataReader reader)
         {
             var user = new User();
 
-            if (dataReader !=  null && dataReader.HasRows)
+            if (reader !=  null)
             {
-                user.ID = dataReader.GetString(dataReader.GetOrdinal("ID"));
-                user.Name = dataReader.GetString (dataReader.GetOrdinal("Name"));
+                user.ID = reader.GetString(reader.GetOrdinal("ID"));
+                user.Name = reader.GetString (reader.GetOrdinal("Name"));
             }
 
             return user;
