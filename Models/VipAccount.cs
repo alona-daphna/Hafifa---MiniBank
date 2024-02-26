@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MiniBank.Models
 {
-    internal class VipAccount : Account
+    internal class VipAccount(string ownerID) : Account(ownerID)
     {
     }
 }
