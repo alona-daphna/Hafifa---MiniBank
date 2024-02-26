@@ -14,6 +14,6 @@ namespace MiniBank
             ConnectionString = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetConnectionString("DB") ?? throw new Exception("Can't find connection string.");
         }
 
-        internal IDbConnection GetConnection() => new SqlConnection(ConnectionString);
+        internal SqlConnection GetConnection() => new(ConnectionString);
     }
 }
