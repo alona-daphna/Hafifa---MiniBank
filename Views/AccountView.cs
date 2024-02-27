@@ -4,16 +4,17 @@ using MiniBank.Enums;
 
 namespace MiniBank.Views
 {
-    internal class AccountView
+    internal class AccountView(SessionManager sessionManager)
     {
         private AccountController AccountController { get; set; } = new AccountController();
         private UserController UserController { get; set; } = new UserController();
         private ColorWriter ColorWriter { get; set; } = new ColorWriter();
+        private SessionManager SessionManager { get; set; } = sessionManager;
         internal void ListAccountsByOwner()
         {
             ColorWriter.DisplayPrimary("Enter user ID: ");
             var userID = Console.ReadLine();
-            var (_, user, _) = UserController.GetByID(userID);
+            var user = UserController.GetByID(userID).Data;
 
             if (user == null)
             {
@@ -57,11 +58,11 @@ namespace MiniBank.Views
             try
             {
                 var (userID, accountID, amount) = UpdateBalancePrompts();
-                var (status, data, error) = AccountController.Deposit(userID, accountID, amount);
+                var (status, balance, error) = AccountController.Deposit(userID, accountID, amount);
 
                 if (status == OperationStatus.Success)
                 {
-                    ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {data}");
+                    ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance}");
                 } else
                 {
                     ColorWriter.DisplayErrorMessage(status == OperationStatus.NotFound ? "Account does not exist" : error);
@@ -77,11 +78,11 @@ namespace MiniBank.Views
             try
             {
                 var (user, account, amount) = UpdateBalancePrompts();
-                var (status, data, error) = AccountController.Withdraw(user, account, amount);
+                var (status, balance, error) = AccountController.Withdraw(user, account, amount);
 
                 if (status == OperationStatus.Success)
                 {
-                    ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {data}");
+                    ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance}");
                 }
                 else
                 {
@@ -105,11 +106,11 @@ namespace MiniBank.Views
 
             if (int.TryParse(accountType, out var type)) 
             {
-                var (status, data, error) = AccountController.Create(userID, type);
+                var (status, id, error) = AccountController.Create(userID, type);
 
                 if (status == OperationStatus.Success)
                 {
-                    ColorWriter.DisplaySuccessMessage($"Account created successfully. Your new account ID is {data}");
+                    ColorWriter.DisplaySuccessMessage($"Account created successfully. Your new account ID is {id}");
                 } else
                 {
                     ColorWriter.DisplayErrorMessage(error);

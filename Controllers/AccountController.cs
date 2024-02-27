@@ -1,16 +1,17 @@
 ﻿using Microsoft.Data.SqlClient;
 using MiniBank.Converters;
 using MiniBank.Models;
-using MiniBank.Views;
 using MiniBank.Utils;
 using MiniBank.Enums;
+using MiniBank.Logs;
 
 namespace MiniBank.Controllers
 {
     internal class AccountController
     {
         private DBConnection DBConnection { get; set; } = new DBConnection();
-        private AccountConverter AccountConverter { get; set; } = new AccountConverter();   
+        private AccountConverter AccountConverter { get; set; } = new AccountConverter();
+        private Logger Logger { get; set; } = new Logger();
         
         internal List<Account> GetByOwnerId(string id)
         {

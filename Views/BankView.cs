@@ -1,11 +1,6 @@
-﻿using MiniBank.Controllers;
-using MiniBank.Enums;
+﻿using MiniBank.Enums;
+using MiniBank.Logs;
 using MiniBank.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniBank.Views
 {
@@ -14,23 +9,26 @@ namespace MiniBank.Views
         private AccountView AccountView { get; set; }
         private UserView UserView { get; set; }
         private ColorWriter ColorWriter { get; set; }
-        private Dictionary<int, (Action action, string description)> Actions { get; set; }
+        private Dictionary<int, (Action action, Func<string> description)> Actions { get; set; }
+        private SessionManager SessionManager { get; set; }
 
         public BankView()
         {
+            SessionManager = new SessionManager();
             ColorWriter = new ColorWriter();
-            AccountView = new AccountView();
-            UserView = new UserView();
-            Actions = new Dictionary<int, (Action, string)>()
+            AccountView = new AccountView(SessionManager);
+            UserView = new UserView(SessionManager);
+            Actions = new Dictionary<int, (Action, Func<string>)>()
             {
-                { (int) MenuAction.ListAccountsByOwner, (AccountView.ListAccountsByOwner, "LIST ACCOUNTS OWNED BY USER") },
-                { (int) MenuAction.ListUsers, (UserView.ListUsers, "LIST USERS" )},
-                { (int) MenuAction.CreateUser, (UserView.CreateUser, "CREATE USER")},
-                { (int) MenuAction.DeleteUser, (UserView.DeleteUser, "DELETE USER") },
-                { (int) MenuAction.CreateAccount, (AccountView.CreateAccount, "CREATE ACCOUNT") },
-                { (int) MenuAction.DeleteAccount, (AccountView.DeleteAccount, "DELETE ACCOUNT") },
-                { (int) MenuAction.Deposit, (AccountView.Deposit, "DEPOSIT") },
-                { (int) MenuAction.Withdraw, (AccountView.Withdraw, "WITHDRAW") }
+                { (int) MenuAction.ListAccountsByOwner, (AccountView.ListAccountsByOwner, () => "LIST ACCOUNTS OWNED BY USER") },
+                { (int) MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS" )},
+                { (int) MenuAction.CreateUser, (UserView.CreateUser, () => "CREATE USER")},
+                { (int) MenuAction.DeleteUser, (UserView.DeleteUser, () => "DELETE USER") },
+                { (int) MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT") },
+                { (int) MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT") },
+                { (int) MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT") },
+                { (int) MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW") },
+                { (int) MenuAction.Auth, (SessionManager.Auth, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN") },
             };
 
         }
@@ -39,7 +37,7 @@ namespace MiniBank.Views
         {
             ColorWriter.DisplayPrimary("############### MENU ###############");
             Actions.ToList().ForEach(action =>
-                Console.WriteLine($"{action.Key} \t {action.Value.description}")
+                Console.WriteLine($"{action.Key} \t {action.Value.description()}")
             );
 
             Console.WriteLine($"{(int)MenuAction.Exit} \t EXIT");
@@ -56,7 +54,7 @@ namespace MiniBank.Views
             {
                 DisplayMenu();
 
-                Console.Write("Your Selection: ");
+                Console.Write("(" + (SessionManager.IsUserLoggedIn ? SessionManager.LoggedUser.Name : "guest") + "): ");
                 var input = Console.ReadLine();
 
                 if (TryParseAction(input, out int action))

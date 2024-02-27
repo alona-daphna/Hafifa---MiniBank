@@ -10,6 +10,7 @@
         DeleteAccount,
         Deposit,
         Withdraw,
+        Auth,
         Exit
     }
 }
