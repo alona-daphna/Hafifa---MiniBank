@@ -7,40 +7,27 @@ namespace MiniBank.Views
     internal class AccountView(SessionManager sessionManager)
     {
         private AccountController AccountController { get; set; } = new AccountController();
-        private UserController UserController { get; set; } = new UserController();
         private ColorWriter ColorWriter { get; set; } = new ColorWriter();
         private SessionManager SessionManager { get; set; } = sessionManager;
-        internal void ListAccountsByOwner()
+        internal void ListAccounts()
         {
-            ColorWriter.DisplayPrimary("Enter user ID: ");
-            var userID = Console.ReadLine();
-            var user = UserController.GetByID(userID).Data;
-
-            if (user == null)
+            if (!SessionManager.EnsureLogin())
             {
-                ColorWriter.DisplayErrorMessage("User does not exist.");               
+                return;
             }
-            else
+
+            var accounts = AccountController.GetByOwnerId(SessionManager.LoggedUser.ID);
+
+            if (accounts.Count == 0)
             {
-                var accounts = AccountController.GetByOwnerId(userID);
-
-                if (accounts.Count == 0)
-                {
-                    Console.WriteLine("User do not own any accounts. Consider creating one.");
-                }
-
-                accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
+                Console.WriteLine("User do not own any accounts. Consider creating one.");
             }
+
+            accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
         }
 
-        private (string, string, float) UpdateBalancePrompts()
+        private (string, float) UpdateBalancePrompts()
         {
-            ColorWriter.DisplayPrimary("Enter user ID: ");
-            var userID = Console.ReadLine();
-
-            if (UserController.GetByID(userID).Status == OperationStatus.NotFound) 
-                throw new ArgumentException("User does not exist.");
-
             ColorWriter.DisplayPrimary("Enter account ID: ");
             var accountID = Console.ReadLine();
 
@@ -50,15 +37,20 @@ namespace MiniBank.Views
             ColorWriter.DisplayPrimary("Enter amount: ");
             var amount = float.TryParse(Console.ReadLine(), out float value) ? value : throw new ArgumentException("Invalid amount.");
 
-            return (userID, accountID, amount);
+            return (accountID, amount);
         }
 
         internal void Deposit()
         {
+            if (!SessionManager.EnsureLogin())
+            {
+                return;
+            }
+
             try
             {
-                var (userID, accountID, amount) = UpdateBalancePrompts();
-                var (status, balance, error) = AccountController.Deposit(userID, accountID, amount);
+                var (accountID, amount) = UpdateBalancePrompts();
+                var (status, balance, error) = AccountController.Deposit(SessionManager.LoggedUser.ID, accountID, amount);
 
                 if (status == OperationStatus.Success)
                 {
@@ -75,10 +67,15 @@ namespace MiniBank.Views
 
         internal void Withdraw()
         {
+            if (!SessionManager.EnsureLogin())
+            {
+                return;
+            }
+
             try
             {
-                var (user, account, amount) = UpdateBalancePrompts();
-                var (status, balance, error) = AccountController.Withdraw(user, account, amount);
+                var (account, amount) = UpdateBalancePrompts();
+                var (status, balance, error) = AccountController.Withdraw(SessionManager.LoggedUser.ID, account, amount);
 
                 if (status == OperationStatus.Success)
                 {
@@ -97,8 +94,10 @@ namespace MiniBank.Views
 
         internal void CreateAccount()
         {
-            ColorWriter.DisplayPrimary("Enter user ID: ");
-            var userID = Console.ReadLine();
+            if (!SessionManager.EnsureLogin())
+            {
+                return;
+            }
 
             ColorWriter.DisplayPrimary("Choose account type: ");
             new AccountFactory().AccountCreators.ToList().ForEach(x => Console.WriteLine($"{x.Key} \t {x.Value.name}"));
@@ -106,7 +105,7 @@ namespace MiniBank.Views
 
             if (int.TryParse(accountType, out var type)) 
             {
-                var (status, id, error) = AccountController.Create(userID, type);
+                var (status, id, error) = AccountController.Create(SessionManager.LoggedUser.ID, type);
 
                 if (status == OperationStatus.Success)
                 {
@@ -123,12 +122,14 @@ namespace MiniBank.Views
 
         internal void DeleteAccount()
         {
-            ColorWriter.DisplayPrimary("Enter user ID: ");
-            var userID = Console.ReadLine();
+            if(!SessionManager.EnsureLogin())
+            {
+                return;
+            }
 
             ColorWriter.DisplayPrimary("Enter account ID: ");
             var accountID = Console.ReadLine();
-            var (status, _, error) = AccountController.Delete(userID, accountID);
+            var (status, _, error) = AccountController.Delete(SessionManager.LoggedUser.ID, accountID);
 
             if (status == OperationStatus.Success)
             {
