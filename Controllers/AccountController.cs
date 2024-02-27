@@ -1,11 +1,9 @@
 ﻿using Microsoft.Data.SqlClient;
 using MiniBank.Converters;
 using MiniBank.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MiniBank.Views;
+using MiniBank.Utils;
+using MiniBank.Enums;
 
 namespace MiniBank.Controllers
 {
@@ -13,6 +11,7 @@ namespace MiniBank.Controllers
     {
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private AccountConverter AccountConverter { get; set; } = new AccountConverter();   
+        private MainView AccountView { get; set; } = new MainView();   
         
         internal List<Account> GetByOwnerId(string id)
         {
@@ -33,7 +32,7 @@ namespace MiniBank.Controllers
 
             return accounts;
         }       
-        internal Account GetByID(string id)
+        internal Response<Account> GetByID(string id)
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -43,29 +42,42 @@ namespace MiniBank.Controllers
 
             using var reader = command.ExecuteReader();
 
-            while (reader.Read())
+            if (reader.Read())
             {
-                return AccountConverter.Convert(reader);
+                return new Response<Account> { Status = OperationStatus.Success, Data = AccountConverter.Convert(reader) };
             }
 
-            throw new ArgumentException("Account not found");
+            return new Response<Account> { Status = OperationStatus.NotFound };
         }
 
-        internal void Delete(string ownerId, string accountId)
+        internal Response<Account?> Delete(string ownerId, string accountId)
         {
+            var ( status, account, error ) = GetByID(ownerId);
+
+            if (status != OperationStatus.Success)
+            {
+                return new Response<Account?> { Status = status, ErrorMessage = error };
+            }
+
+            account.EnsureOwnership(ownerId);
+
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            var command = new SqlCommand("DELETE FROM Accounts WHERE OwnerID = @OwnerID AND ID = @ID", conn);
-            command.Parameters.AddWithValue("OwnerID", ownerId);
+            var command = new SqlCommand("DELETE FROM Accounts WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", accountId);
 
-            var affectedRows = command.ExecuteNonQuery();
-
-            if (affectedRows == 0) throw new ArgumentException("Account with this ID of does not exist for this user");
+            try
+            {
+                command.ExecuteNonQuery();
+                return new Response<Account?> { Status = OperationStatus.Success };
+            } catch (SqlException)
+            {
+                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while deleting the account. Please try again later." };
+            }
         }
 
-        internal string Create(string ownerId, int type)
+        internal Response<string> Create(string ownerId, int type)
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -76,37 +88,52 @@ namespace MiniBank.Controllers
             command.Parameters.AddWithValue("OwnerID", ownerId);
             command.Parameters.AddWithValue("Type", type);
 
-            command.ExecuteNonQuery();
-
-            return id;
-        }
-
-        internal void Deposit(string ownerId, string accountId, float amount)
-        {
-            var account = GetByID(accountId);
-            AuthorizeAccountOwner(ownerId, account.OwnerID);
-            account.Deposit(amount);
-            UpdateBalance(accountId, account.Balance);
-        }
-
-        internal void Withdraw(string ownerId, string accountId, float amount)
-        {
-            var account = GetByID(accountId);
-            AuthorizeAccountOwner(ownerId, account.OwnerID);
-            account.Withdraw(amount);
-            UpdateBalance(accountId, account.Balance);
-        }
-
-        private void AuthorizeAccountOwner(string requestingOwnerId, string actualOwnerId)
-        {
-            if (requestingOwnerId != actualOwnerId)
+            try
             {
-                throw new UnauthorizedAccessException("Unauthorized");
+                command.ExecuteNonQuery();
+                return new Response<string> { Status = OperationStatus.Success, Data = id };
+            } catch (SqlException ex)
+            {
+                if (ex.Number == 547)
+                {
+                   return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "Invalid user ID or account type." };
+                }
+
+                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while creating the account. Please try again later." };
             }
         }
-        
 
-        private void UpdateBalance(string accountId, float updatedBalance)
+        internal Response<float> Deposit(string ownerId, string accountId, float amount)
+        {
+            var (status, account, error) = GetByID(ownerId);
+
+            if (status != OperationStatus.Success)
+            {
+                return new Response<float> { Status = status, ErrorMessage = error };
+            }
+         
+            account.EnsureOwnership(ownerId);
+            account.Deposit(amount);
+
+            return UpdateBalance(accountId, account.Balance);
+        }
+
+        internal Response<float> Withdraw(string ownerId, string accountId, float amount)
+        {
+            var (status, account, error) = GetByID(ownerId);
+
+            if (status != OperationStatus.Success)
+            {
+                return new Response<float> { Status = status, ErrorMessage = error };
+            }
+
+            account.EnsureOwnership(ownerId);  
+            account.Withdraw(amount);
+
+            return UpdateBalance(accountId, account.Balance);
+        }
+
+        private Response<float> UpdateBalance(string accountId, float updatedBalance)
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -115,7 +142,16 @@ namespace MiniBank.Controllers
             command.Parameters.AddWithValue("UpdatedBalance", updatedBalance);
             command.Parameters.AddWithValue("AccountID", accountId);
 
-            command.ExecuteNonQuery();
+            try
+            {
+                command.ExecuteNonQuery();
+            }
+            catch (Exception)
+            {
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while updating account balance. Please try again later." };
+            }
+
+            return new Response<float> { Status = OperationStatus.Success, Data = updatedBalance };
         }
     }
 }

@@ -1,12 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
-using MiniBank.Models;
+﻿using MiniBank.Models;
 using MiniBank.Utils;
-using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniBank.Converters
 {

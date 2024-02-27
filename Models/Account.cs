@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MiniBank.Models
+﻿namespace MiniBank.Models
 {
-    internal abstract class Account()
+    internal abstract class Account
     {
         internal string ID { get; set; }
         internal float Balance { get; set; }
@@ -28,6 +22,14 @@ namespace MiniBank.Models
             if (amount <= 0)
             {
                 throw new ArgumentException("Amount must be positive.");
+            }
+        }
+
+        internal void EnsureOwnership(string ownerID)
+        {
+            if (ownerID != OwnerID)
+            {
+                throw new UnauthorizedAccessException();
             }
         }
     }

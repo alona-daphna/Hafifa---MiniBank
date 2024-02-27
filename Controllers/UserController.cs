@@ -1,13 +1,8 @@
 ﻿using MiniBank.Converters;
 using MiniBank.Models;
-using System;
-using System.Collections.Generic;
-using Microsoft.Data.Sql;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
+using MiniBank.Utils;
+using MiniBank.Enums;
 
 namespace MiniBank.Controllers
 {
@@ -16,7 +11,7 @@ namespace MiniBank.Controllers
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private UserConverter UserConverter { get; set; } = new UserConverter();
 
-        internal string Create(string name) 
+        internal Response<string> Create(string name) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -26,11 +21,18 @@ namespace MiniBank.Controllers
             var id = Guid.NewGuid().ToString();
             command.Parameters.AddWithValue("ID", id);
 
-            command.ExecuteNonQuery();
-            return id;
+            try
+            {
+                command.ExecuteNonQuery();
+                return new Response<string> { Status = OperationStatus.Success, Data = id };
+            }
+            catch (SqlException)
+            {
+                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while creating user. Please try again later." };
+            }
         }
 
-        internal void Delete(string id) 
+        internal Response<User?> Delete(string id) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -38,9 +40,18 @@ namespace MiniBank.Controllers
             var command = new SqlCommand("DELETE FROM Users WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", id);
 
-            var affectedRows = command.ExecuteNonQuery();
+            try
+            {
+                if (command.ExecuteNonQuery() == 0)
+                {
+                    return new Response<User?> { Status = OperationStatus.NotFound };
+                }
 
-            if (affectedRows == 0) throw new ArgumentException("user not found");
+                return new Response<User?> { Status = OperationStatus.Success };
+            } catch (SqlException)
+            {
+                return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while deleting the user. Please try again later." };
+            }
         }
 
         internal List<User> GetAll() 
@@ -64,7 +75,7 @@ namespace MiniBank.Controllers
         }
 
 
-        internal User GetByID(string id) 
+        internal Response<User> GetByID(string id) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -74,12 +85,12 @@ namespace MiniBank.Controllers
 
             using var reader = command.ExecuteReader();
 
-            while (reader.Read())
+            if (reader.Read())
             {
-                return UserConverter.Convert(reader);
+                return new Response<User> { Status = OperationStatus.Success, Data = UserConverter.Convert(reader) };
             }
 
-            throw new ArgumentException("user not found");
+            return new Response<User> { Status = OperationStatus.NotFound };
         }
     }
 }
