@@ -9,7 +9,7 @@ namespace MiniBank.Views
         private AccountView AccountView { get; set; }
         private UserView UserView { get; set; }
         private ColorWriter ColorWriter { get; set; }
-        private Dictionary<int, (Action action, Func<string> description)> Actions { get; set; }
+        private Dictionary<int, (Action action, Func<string> description, bool guestsAllowed)> Actions { get; set; }
         private SessionManager SessionManager { get; set; }
 
         public BankView()
@@ -18,17 +18,17 @@ namespace MiniBank.Views
             ColorWriter = new ColorWriter();
             AccountView = new AccountView(SessionManager);
             UserView = new UserView(SessionManager);
-            Actions = new Dictionary<int, (Action, Func<string>)>()
+            Actions = new Dictionary<int, (Action, Func<string>, bool)>()
             {
-                { (int) MenuAction.ListAccountsByOwner, (AccountView.ListAccountsByOwner, () => "LIST ACCOUNTS OWNED BY USER") },
-                { (int) MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS" )},
-                { (int) MenuAction.CreateUser, (UserView.CreateUser, () => "CREATE USER")},
-                { (int) MenuAction.DeleteUser, (UserView.DeleteUser, () => "DELETE USER") },
-                { (int) MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT") },
-                { (int) MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT") },
-                { (int) MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT") },
-                { (int) MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW") },
-                { (int) MenuAction.Auth, (SessionManager.Auth, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN") },
+                { (int) MenuAction.ListAccountsByOwner, (AccountView.ListAccounts, () => "LIST ACCOUNTS", false) },
+                { (int) MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS", true )},
+                { (int) MenuAction.CreateUser, (UserView.CreateUser, () => "CREATE USER", true)},
+                { (int) MenuAction.DeleteUser, (UserView.DeleteUser, () => "DELETE USER", false) },
+                { (int) MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT", false) },
+                { (int) MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT", false) },
+                { (int) MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT", false) },
+                { (int) MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW", false) },
+                { (int) MenuAction.Auth, (SessionManager.Auth, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN", true) },
             };
 
         }
@@ -37,10 +37,17 @@ namespace MiniBank.Views
         {
             ColorWriter.DisplayPrimary("############### MENU ###############");
             Actions.ToList().ForEach(action =>
-                Console.WriteLine($"{action.Key} \t {action.Value.description()}")
-            );
+            {
+                if (SessionManager.IsUserLoggedIn || (action.Value.guestsAllowed && !SessionManager.IsUserLoggedIn))
+                {
+                    ColorWriter.DisplayPrimary($"{action.Key} \t {action.Value.description()}");
+                } else
+                {
+                    Console.WriteLine($"{action.Key} \t {action.Value.description()}");
+                }
+            });
 
-            Console.WriteLine($"{(int)MenuAction.Exit} \t EXIT");
+            ColorWriter.DisplayPrimary($"{(int)MenuAction.Exit} \t EXIT");
             ColorWriter.DisplayPrimary("####################################");
         }
 
