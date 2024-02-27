@@ -1,4 +1,4 @@
-﻿using MiniBank;
+﻿using MiniBank.Views;
 
 internal class Program
 {

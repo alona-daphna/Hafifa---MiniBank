@@ -11,7 +11,6 @@ namespace MiniBank.Controllers
     {
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private AccountConverter AccountConverter { get; set; } = new AccountConverter();   
-        private MainView AccountView { get; set; } = new MainView();   
         
         internal List<Account> GetByOwnerId(string id)
         {
@@ -52,14 +51,20 @@ namespace MiniBank.Controllers
 
         internal Response<Account?> Delete(string ownerId, string accountId)
         {
-            var ( status, account, error ) = GetByID(ownerId);
+            var ( status, account, error ) = GetByID(accountId);
 
             if (status != OperationStatus.Success)
             {
                 return new Response<Account?> { Status = status, ErrorMessage = error };
             }
 
-            account.EnsureOwnership(ownerId);
+            try
+            {
+                account.EnsureOwnership(ownerId);
+            } catch (UnauthorizedAccessException ex) 
+            {
+                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+            }
 
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -105,32 +110,45 @@ namespace MiniBank.Controllers
 
         internal Response<float> Deposit(string ownerId, string accountId, float amount)
         {
-            var (status, account, error) = GetByID(ownerId);
+            var (status, account, error) = GetByID(accountId);
 
             if (status != OperationStatus.Success)
             {
                 return new Response<float> { Status = status, ErrorMessage = error };
             }
          
-            account.EnsureOwnership(ownerId);
-            account.Deposit(amount);
+            try
+            {
+                account.EnsureOwnership(ownerId);
+                account.Deposit(amount);
 
-            return UpdateBalance(accountId, account.Balance);
+                return UpdateBalance(accountId, account.Balance);
+            } catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
+            {
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+            }
         }
 
         internal Response<float> Withdraw(string ownerId, string accountId, float amount)
         {
-            var (status, account, error) = GetByID(ownerId);
+            var (status, account, error) = GetByID(accountId);
 
             if (status != OperationStatus.Success)
             {
                 return new Response<float> { Status = status, ErrorMessage = error };
             }
 
-            account.EnsureOwnership(ownerId);  
-            account.Withdraw(amount);
+            try
+            {
+                account.EnsureOwnership(ownerId);
+                account.Withdraw(amount);
 
-            return UpdateBalance(accountId, account.Balance);
+                return UpdateBalance(accountId, account.Balance);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
+            {
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+            }
         }
 
         private Response<float> UpdateBalance(string accountId, float updatedBalance)

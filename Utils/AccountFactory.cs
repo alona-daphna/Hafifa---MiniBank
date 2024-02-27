@@ -5,19 +5,19 @@ namespace MiniBank.Utils
 {
     internal class AccountFactory
     {
-        public Dictionary<int, Func<Account>> AccountCreators { get; set; }
+        public Dictionary<int, (Func<Account> creator, string name)> AccountCreators { get; set; }
 
         public AccountFactory()
         {
-            AccountCreators = new Dictionary<int, Func<Account>>
+            AccountCreators = new Dictionary<int, (Func<Account>, string)>
             {
-                {(int)AccountType.Simple, () => new SimpleAccount() },
-                {(int)AccountType.Vip, () => new VipAccount() },
+                {(int)AccountType.Simple, (() => new SimpleAccount(), "Simple") },
+                {(int)AccountType.Vip, (() => new VipAccount(), "VIP") },
             };
         }
 
-        public Account Create(int type) => AccountCreators.TryGetValue(type, out Func<Account>? ctor) 
-            ? ctor() 
+        public Account Create(int type) => AccountCreators.TryGetValue(type, out var creatorInfo)
+            ? creatorInfo.creator() 
             : throw new ArgumentException("Invalid account type.");
     }
 }

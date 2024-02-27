@@ -16,7 +16,7 @@ namespace MiniBank.Utils
         }
         internal void DisplaySuccessMessage(string message)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
+            Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
         }

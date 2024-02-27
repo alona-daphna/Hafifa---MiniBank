@@ -29,7 +29,7 @@
         {
             if (ownerID != OwnerID)
             {
-                throw new UnauthorizedAccessException();
+                throw new UnauthorizedAccessException("You don't own this account, operation is not authorized.");
             }
         }
     }
