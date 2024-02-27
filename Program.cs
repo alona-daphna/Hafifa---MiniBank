@@ -4,6 +4,6 @@ internal class Program
 {
     public static void Main()
     {
-        new Bank().Start();
+        new BankView().Start();
     }
 }

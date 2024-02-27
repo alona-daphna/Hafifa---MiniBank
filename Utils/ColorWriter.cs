@@ -1,13 +1,19 @@
-﻿namespace MiniBank.Views
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MiniBank.Utils
 {
-    internal class MainView
+    internal class ColorWriter
     {
         internal void DisplayErrorMessage(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
-        }        
+        }
         internal void DisplaySuccessMessage(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -15,14 +21,11 @@
             Console.ForegroundColor = ConsoleColor.White;
         }
 
-        internal void DisplayMenu()
+        internal void DisplayPrimary(string message)
         {
-
-        }
-
-        internal string SelectAction()
-        {
-            return Console.ReadLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(message);
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }
