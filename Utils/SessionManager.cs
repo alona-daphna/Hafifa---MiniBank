@@ -20,15 +20,24 @@ namespace MiniBank.Utils
             }
         }
         private void LogIn()
-        {
+        { 
             ColorWriter.DisplayPrimary("Enter User ID: ");
             var userID = Console.ReadLine();
 
-            var (status, data, _) = new UserController().GetByID(userID);
+            ColorWriter.DisplayPrimary("Enter password: ");
+            var password = Console.ReadLine();
+
+            var (status, user, _) = new UserController().GetByID(userID);
 
             if (status == Enums.OperationStatus.Success)
             {
-                LoggedUser = data;
+                if (new Password().VerifyPassword(password, user.Password))
+                {
+                    LoggedUser = user;
+                } else
+                {
+                    ColorWriter.DisplayErrorMessage("Incorrect password.");
+                }
             } else
             {
                 ColorWriter.DisplayErrorMessage("User does not exist.");

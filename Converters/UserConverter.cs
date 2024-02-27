@@ -12,7 +12,8 @@ namespace MiniBank.Converters
             if (reader !=  null && reader.HasRows)
             {
                 user.ID = reader.GetString(reader.GetOrdinal("ID"));
-                user.Name = reader.GetString (reader.GetOrdinal("Name"));
+                user.Name = reader.GetString(reader.GetOrdinal("Name"));
+                user.Password = reader.GetString(reader.GetOrdinal("Password"));
             }
 
             return user;

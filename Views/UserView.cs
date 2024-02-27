@@ -1,5 +1,6 @@
 ﻿using MiniBank.Controllers;
 using MiniBank.Utils;
+using System.Security.Cryptography;
 
 namespace MiniBank.Views
 {
@@ -51,7 +52,11 @@ namespace MiniBank.Views
         {
             ColorWriter.DisplayPrimary("Enter your name: ");
             var name = Console.ReadLine();
-            var (status, id, error) = UserController.Create(name);
+            ColorWriter.DisplayPrimary("Create a password: ");
+            var password = Console.ReadLine();
+            var hashedPassword = new Password().HashPassword(password);
+
+            var (status, id, error) = UserController.Create(name, hashedPassword);
 
             if (status == Enums.OperationStatus.Success)
             {
@@ -61,6 +66,5 @@ namespace MiniBank.Views
                 ColorWriter.DisplayErrorMessage(error);
             }
         }
-
     }
 }

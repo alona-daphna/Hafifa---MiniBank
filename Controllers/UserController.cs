@@ -11,15 +11,16 @@ namespace MiniBank.Controllers
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private UserConverter UserConverter { get; set; } = new UserConverter();
 
-        internal Response<string> Create(string name) 
+        internal Response<string> Create(string name, string password) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            var command = new SqlCommand("INSERT Users (ID, Name) VALUES (@ID, @Name)", conn);
+            var command = new SqlCommand("INSERT Users (ID, Name, Password) VALUES (@ID, @Name, @Password)", conn);
             command.Parameters.AddWithValue("Name", name);
             var id = Guid.NewGuid().ToString();
             command.Parameters.AddWithValue("ID", id);
+            command.Parameters.AddWithValue("Password", password);
 
             try
             {
@@ -80,7 +81,7 @@ namespace MiniBank.Controllers
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
-            var command = new SqlCommand("SELECT ID, Name FROM Users WHERE ID = @ID", conn);
+            var command = new SqlCommand("SELECT ID, Name, Password FROM Users WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", id);
 
             using var reader = command.ExecuteReader();

@@ -1,5 +1,4 @@
 ﻿using MiniBank.Enums;
-using MiniBank.Logs;
 using MiniBank.Utils;
 
 namespace MiniBank.Views
@@ -61,7 +60,7 @@ namespace MiniBank.Views
             {
                 DisplayMenu();
 
-                Console.Write("(" + (SessionManager.IsUserLoggedIn ? SessionManager.LoggedUser.Name : "guest") + "): ");
+                Console.Write("(" + (SessionManager.IsUserLoggedIn ? SessionManager.LoggedUser.Name : "guest") + ")@MiniBank: ");
                 var input = Console.ReadLine();
 
                 if (TryParseAction(input, out int action))
