@@ -1,5 +1,6 @@
 ﻿using MiniBank.Controllers;
 using MiniBank.Utils;
+using System.Drawing;
 
 namespace MiniBank.Views
 {
@@ -30,7 +31,7 @@ namespace MiniBank.Views
         }
 
 
-        internal void DeleteUser()
+        internal void Delete()
         {
             SessionManager.Authorize(() =>
             {
@@ -55,14 +56,24 @@ namespace MiniBank.Views
             });
         }
 
-
-        internal void CreateUser()
+        private string GetValidInputString(string prompt)
         {
-            ColorWriter.DisplayPrimary("Enter your name: ");
-            var name = Console.ReadLine();
+            string? input = null;
 
-            ColorWriter.DisplayPrimary("Create a password: ");
-            var password = Console.ReadLine();
+            while (string.IsNullOrEmpty(input))
+            {
+                ColorWriter.DisplayPrimary(prompt);
+                input = Console.ReadLine();
+            }
+
+            return input;
+        }
+
+        internal void Create()
+        {
+            var name = GetValidInputString("Enter your name: ");
+
+            var password = GetValidInputString("Create a password: ");
 
             var hashedPassword = new PasswordManager().HashPassword(password);
 

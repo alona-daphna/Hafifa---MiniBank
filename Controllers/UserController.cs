@@ -3,6 +3,7 @@ using MiniBank.Models;
 using Microsoft.Data.SqlClient;
 using MiniBank.Utils;
 using MiniBank.Enums;
+using Serilog;
 
 namespace MiniBank.Controllers
 {
@@ -10,6 +11,7 @@ namespace MiniBank.Controllers
     {
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private UserConverter UserConverter { get; set; } = new UserConverter();
+        private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
 
 
         internal Response<string> Create(string name, string password) 
@@ -26,10 +28,14 @@ namespace MiniBank.Controllers
             try
             {
                 command.ExecuteNonQuery();
+                Logger.Information("Created a new user with ID {id}", id);
+
                 return new Response<string> { Status = OperationStatus.Success, Data = id };
             }
-            catch (SqlException)
+            catch (SqlException ex)
             {
+                Logger.Error(ex, "Error in creating user.");
+
                 return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
@@ -49,9 +55,13 @@ namespace MiniBank.Controllers
                     return new Response<User?> { Status = OperationStatus.NotFound };
                 }
 
+                Logger.Information("Deleted user with ID {id}", id);
+
                 return new Response<User?> { Status = OperationStatus.Success };
-            } catch (SqlException)
+            } catch (SqlException ex)
             {
+                Logger.Information("Error in deleting user with ID {id}", id);
+
                 return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
@@ -74,10 +84,12 @@ namespace MiniBank.Controllers
                 {
                     users.Add(UserConverter.Convert(reader));
                 }
-                
+
                 return new Response<List<User>> { Status = OperationStatus.Success, Data = users };
-            } catch (SqlException)
+            } catch (SqlException ex)
             {
+                Logger.Error(ex, "Error in retrieving users");
+
                 return new Response<List<User>> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }

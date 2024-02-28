@@ -1,5 +1,6 @@
 ﻿using MiniBank.Controllers;
 using MiniBank.Models;
+using Serilog;
 
 namespace MiniBank.Utils
 {
@@ -8,6 +9,7 @@ namespace MiniBank.Utils
         internal User LoggedUser { get; set; }
         internal bool IsUserLoggedIn => LoggedUser != null;
         private ColorWriter ColorWriter { get; set; } = new ColorWriter();
+        private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
 
 
         internal void Authorize(Action action)
@@ -49,8 +51,10 @@ namespace MiniBank.Utils
                 if (new PasswordManager().VerifyPassword(password, user.Password))
                 {
                     LoggedUser = user;
+                    Logger.Information("User {id} logged in", user.ID);
                 } else
                 {
+                    Logger.Information("Failed login attempt for user {id}", user.ID);
                     ColorWriter.DisplayErrorMessage("Incorrect password.");
                 }
             } else
@@ -60,6 +64,10 @@ namespace MiniBank.Utils
         }
 
 
-        private void LogOut() => LoggedUser = null;
+        private void LogOut()
+        {
+            Logger.Information("User {id} logged out", LoggedUser.ID);
+            LoggedUser = null;
+        }
     }
 }

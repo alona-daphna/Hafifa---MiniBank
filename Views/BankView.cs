@@ -1,5 +1,7 @@
 ﻿using MiniBank.Enums;
 using MiniBank.Utils;
+using System.Drawing;
+using Console = Colorful.Console;
 
 namespace MiniBank.Views
 {
@@ -21,20 +23,21 @@ namespace MiniBank.Views
             {
                 { MenuAction.ListAccountsByOwner, (AccountView.ListAccounts, () => "LIST ACCOUNTS", false) },
                 { MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS", true )},
-                { MenuAction.CreateUser, (UserView.CreateUser, () => "CREATE USER", true)},
-                { MenuAction.DeleteUser, (UserView.DeleteUser, () => "DELETE USER", false) },
+                { MenuAction.CreateUser, (UserView.Create, () => "CREATE USER", true)},
+                { MenuAction.DeleteUser, (UserView.Delete, () => "DELETE USER", false) },
                 { MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT", false) },
                 { MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT", false) },
                 { MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT", false) },
                 { MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW", false) },
                 { MenuAction.Auth, (SessionManager.Authenticate, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN", true) },
             };
-
         }
 
 
         internal void Start()
         {
+            Console.WriteAscii("MiniBank", ColorWriter.PrimaryColor);
+
             var exitCondition = false;
 
             do

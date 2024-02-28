@@ -1,31 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
+using Console = Colorful.Console;
 
 namespace MiniBank.Utils
 {
     internal class ColorWriter
     {
-        internal void DisplayErrorMessage(string message)
+        internal Color PrimaryColor { get; set; }
+
+        public ColorWriter()
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(message);
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-        internal void DisplaySuccessMessage(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(message);
-            Console.ForegroundColor = ConsoleColor.White;
+            PrimaryColor = Color.DodgerBlue;
         }
 
-        internal void DisplayPrimary(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(message);
-            Console.ForegroundColor = ConsoleColor.White;
-        }
+        internal void DisplayErrorMessage(string message) => Console.WriteLine(message, Color.Salmon);
+        internal void DisplaySuccessMessage(string message) => Console.WriteLine(message, Color.LawnGreen);
+
+        internal void DisplayPrimary(string message) => Console.WriteLine(message, PrimaryColor);
     }
 }
