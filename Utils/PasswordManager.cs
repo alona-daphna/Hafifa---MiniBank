@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MiniBank.Utils
 {
-    internal class Password
+    internal class PasswordManager
     {
         internal string HashPassword(string password)
         {

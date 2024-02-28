@@ -11,15 +11,16 @@ namespace MiniBank.Controllers
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private UserConverter UserConverter { get; set; } = new UserConverter();
 
+
         internal Response<string> Create(string name, string password) 
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
 
             var command = new SqlCommand("INSERT Users (ID, Name, Password) VALUES (@ID, @Name, @Password)", conn);
-            command.Parameters.AddWithValue("Name", name);
             var id = Guid.NewGuid().ToString();
             command.Parameters.AddWithValue("ID", id);
+            command.Parameters.AddWithValue("Name", name);
             command.Parameters.AddWithValue("Password", password);
 
             try
@@ -29,7 +30,7 @@ namespace MiniBank.Controllers
             }
             catch (SqlException)
             {
-                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while creating user. Please try again later." };
+                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
 
@@ -51,11 +52,11 @@ namespace MiniBank.Controllers
                 return new Response<User?> { Status = OperationStatus.Success };
             } catch (SqlException)
             {
-                return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while deleting the user. Please try again later." };
+                return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
 
-        internal List<User> GetAll() 
+        internal Response<List<User>> GetAll() 
         {
             var users = new List<User>();
 
@@ -63,16 +64,22 @@ namespace MiniBank.Controllers
            
             conn.Open();
 
-            var command = new SqlCommand("SELECT ID, Name FROM Users", conn);
+            var command = new SqlCommand("SELECT ID, Name, Password FROM Users", conn);
 
-            using var reader = command.ExecuteReader();
-                
-            while (reader.Read())
+            try
             {
-                users.Add(UserConverter.Convert(reader));
-            }
+                using var reader = command.ExecuteReader();
                 
-            return users;
+                while (reader.Read())
+                {
+                    users.Add(UserConverter.Convert(reader));
+                }
+                
+                return new Response<List<User>> { Status = OperationStatus.Success, Data = users };
+            } catch (SqlException)
+            {
+                return new Response<List<User>> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
         }
 
 
@@ -84,14 +91,20 @@ namespace MiniBank.Controllers
             var command = new SqlCommand("SELECT ID, Name, Password FROM Users WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", id);
 
-            using var reader = command.ExecuteReader();
-
-            if (reader.Read())
+            try
             {
-                return new Response<User> { Status = OperationStatus.Success, Data = UserConverter.Convert(reader) };
-            }
+                using var reader = command.ExecuteReader();
 
-            return new Response<User> { Status = OperationStatus.NotFound };
+                if (reader.Read())
+                {
+                    return new Response<User> { Status = OperationStatus.Success, Data = UserConverter.Convert(reader) };
+                }
+
+                return new Response<User> { Status = OperationStatus.NotFound };
+            } catch (SqlException)
+            {
+                return new Response<User> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
         }
     }
 }

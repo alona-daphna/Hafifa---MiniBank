@@ -3,7 +3,6 @@ using MiniBank.Converters;
 using MiniBank.Models;
 using MiniBank.Utils;
 using MiniBank.Enums;
-using MiniBank.Logs;
 
 namespace MiniBank.Controllers
 {
@@ -11,9 +10,9 @@ namespace MiniBank.Controllers
     {
         private DBConnection DBConnection { get; set; } = new DBConnection();
         private AccountConverter AccountConverter { get; set; } = new AccountConverter();
-        private Logger Logger { get; set; } = new Logger();
         
-        internal List<Account> GetByOwnerId(string id)
+
+        internal Response<List<Account>> GetByOwnerId(string id)
         {
             var accounts = new List<Account>();
 
@@ -23,15 +22,23 @@ namespace MiniBank.Controllers
             var command = new SqlCommand("SELECT ID, Balance, OwnerID, Type FROM Accounts WHERE OwnerID = @OwnerID", conn);
             command.Parameters.AddWithValue("OwnerID", id);
 
-            using var reader = command.ExecuteReader();
-
-            while (reader.Read())
+            try
             {
-                accounts.Add(AccountConverter.Convert(reader));
-            }
+                using var reader = command.ExecuteReader();
 
-            return accounts;
-        }       
+                while (reader.Read())
+                {
+                    accounts.Add(AccountConverter.Convert(reader));
+                }
+
+                return new Response<List<Account>> { Status = OperationStatus.Success, Data = accounts };
+            } catch (SqlException)
+            {
+                return new Response<List<Account>> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
+        }
+        
+
         internal Response<Account> GetByID(string id)
         {
             using var conn = DBConnection.GetConnection();
@@ -40,15 +47,22 @@ namespace MiniBank.Controllers
             var command = new SqlCommand("SELECT ID, Balance, OwnerID, Type FROM Accounts WHERE ID = @ID", conn);
             command.Parameters.AddWithValue("ID", id);
 
-            using var reader = command.ExecuteReader();
-
-            if (reader.Read())
+            try
             {
-                return new Response<Account> { Status = OperationStatus.Success, Data = AccountConverter.Convert(reader) };
-            }
+                using var reader = command.ExecuteReader();
 
-            return new Response<Account> { Status = OperationStatus.NotFound };
+                if (reader.Read())
+                {
+                    return new Response<Account> { Status = OperationStatus.Success, Data = AccountConverter.Convert(reader) };
+                }
+
+                return new Response<Account> { Status = OperationStatus.NotFound };
+            } catch (SqlException)
+            {
+                return new Response<Account> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
         }
+
 
         internal Response<Account?> Delete(string ownerId, string accountId)
         {
@@ -79,9 +93,10 @@ namespace MiniBank.Controllers
                 return new Response<Account?> { Status = OperationStatus.Success };
             } catch (SqlException)
             {
-                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while deleting the account. Please try again later." };
+                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
+
 
         internal Response<string> Create(string ownerId, int type)
         {
@@ -105,9 +120,10 @@ namespace MiniBank.Controllers
                    return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "Invalid user ID or account type." };
                 }
 
-                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while creating the account. Please try again later." };
+                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
         }
+
 
         internal Response<float> Deposit(string ownerId, string accountId, float amount)
         {
@@ -124,11 +140,16 @@ namespace MiniBank.Controllers
                 account.Deposit(amount);
 
                 return UpdateBalance(accountId, account.Balance);
-            } catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
+            } catch (SqlException)
+            {
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
             {
                 return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
         }
+
 
         internal Response<float> Withdraw(string ownerId, string accountId, float amount)
         {
@@ -146,11 +167,16 @@ namespace MiniBank.Controllers
 
                 return UpdateBalance(accountId, account.Balance);
             }
+            catch (SqlException)
+            {
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+            }
             catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
             {
                 return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
         }
+
 
         private Response<float> UpdateBalance(string accountId, float updatedBalance)
         {
@@ -167,7 +193,7 @@ namespace MiniBank.Controllers
             }
             catch (Exception)
             {
-                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred while updating account balance. Please try again later." };
+                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
 
             return new Response<float> { Status = OperationStatus.Success, Data = updatedBalance };

@@ -9,7 +9,20 @@ namespace MiniBank.Utils
         internal bool IsUserLoggedIn => LoggedUser != null;
         private ColorWriter ColorWriter { get; set; } = new ColorWriter();
 
-        internal void Auth()
+
+        internal void Authorize(Action action)
+        {
+            if (!IsUserLoggedIn)
+            {
+                ColorWriter.DisplayErrorMessage("You must login first.");
+
+                return;
+            }
+
+            action();
+        }
+
+        internal void Authenticate()
         {
             if (IsUserLoggedIn)
             {
@@ -19,6 +32,8 @@ namespace MiniBank.Utils
                 LogIn();
             }
         }
+
+
         private void LogIn()
         { 
             ColorWriter.DisplayPrimary("Enter User ID: ");
@@ -31,7 +46,7 @@ namespace MiniBank.Utils
 
             if (status == Enums.OperationStatus.Success)
             {
-                if (new Password().VerifyPassword(password, user.Password))
+                if (new PasswordManager().VerifyPassword(password, user.Password))
                 {
                     LoggedUser = user;
                 } else
@@ -44,18 +59,7 @@ namespace MiniBank.Utils
             }
         }
 
+
         private void LogOut() => LoggedUser = null;
-
-        internal bool EnsureLogin()
-        {
-            if (!IsUserLoggedIn)
-            {
-                ColorWriter.DisplayErrorMessage("You must login first.");
-
-                return false;
-            }
-
-            return true;
-        }
     }
 }

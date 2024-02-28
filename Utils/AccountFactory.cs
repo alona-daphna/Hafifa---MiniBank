@@ -1,4 +1,6 @@
-﻿using MiniBank.Enums;
+﻿using Microsoft.Data.SqlClient;
+using MiniBank.Converters;
+using MiniBank.Enums;
 using MiniBank.Models;
 
 namespace MiniBank.Utils
@@ -11,8 +13,8 @@ namespace MiniBank.Utils
         {
             AccountCreators = new Dictionary<int, (Func<Account>, string)>
             {
-                {(int)AccountType.Simple, (() => new SimpleAccount(), "Simple") },
-                {(int)AccountType.Vip, (() => new VipAccount(), "VIP") },
+                {1, (() => new SimpleAccount(), "Simple") },
+                {2, (() => new VipAccount(), "VIP") },
             };
         }
 
