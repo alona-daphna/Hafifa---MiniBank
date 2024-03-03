@@ -3,21 +3,21 @@
     internal abstract class Account
     {
         internal string ID { get; set; }
-        internal float Balance { get; set; }
+        internal decimal Balance { get; set; }
         internal string OwnerID { get; set; }
 
-        public void Deposit(float amount) 
+        public void Deposit(decimal amount) 
         {
             EnsureAmountPositive(amount);
             Balance += amount;
         }
-        public virtual void Withdraw(float amount) 
+        public virtual void Withdraw(decimal amount) 
         { 
             EnsureAmountPositive(amount);
             Balance -= amount;
         }
 
-        private void EnsureAmountPositive(float amount)
+        private void EnsureAmountPositive(decimal amount)
         {
             if (amount <= 0)
             {

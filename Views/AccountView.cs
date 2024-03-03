@@ -24,7 +24,7 @@ namespace MiniBank.Views
                         Console.WriteLine("User do not own any accounts. Consider creating one.");
                     }
 
-                    accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance.ToString("F0")}"));
+                    accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
                 } else
                 {
                     ColorWriter.DisplayErrorMessage(error);
@@ -92,7 +92,7 @@ namespace MiniBank.Views
 
                     if (status == OperationStatus.Success)
                     {
-                        ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance.ToString("F0")}");
+                        ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance.ToString("0.00")}");
                     } else
                     {
                         ColorWriter.DisplayErrorMessage(error);
@@ -116,7 +116,7 @@ namespace MiniBank.Views
 
                     if (status == OperationStatus.Success)
                     {
-                        ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance.ToString("F0")}");
+                        ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance.ToString("0.00")}");
                     }
                     else
                     {
@@ -134,7 +134,7 @@ namespace MiniBank.Views
         private void PrintAccountTypes() => new AccountFactory().AccountCreators.ToList().ForEach(x => Console.WriteLine($"{x.Key} \t {x.Value.name}"));
 
 
-        private (string, float) UpdateBalancePrompts()
+        private (string, decimal) UpdateBalancePrompts()
         {
             ColorWriter.DisplayPrimary("Enter account ID: ");
             var accountID = Console.ReadLine();
@@ -145,7 +145,7 @@ namespace MiniBank.Views
             }
 
             ColorWriter.DisplayPrimary("Enter amount: ");
-            var amount = float.TryParse(Console.ReadLine(), out float value) ? value : throw new ArgumentException("Invalid amount.");
+            var amount = decimal.TryParse(Console.ReadLine(), out decimal value) ? value : throw new ArgumentException("Invalid amount.");
 
             return (accountID, amount);
         }

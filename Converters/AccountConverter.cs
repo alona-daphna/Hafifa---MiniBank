@@ -14,7 +14,7 @@ namespace MiniBank.Converters
                 var account = new AccountFactory().Create(type);
 
                 account.ID = dataReader.GetString(dataReader.GetOrdinal("ID"));
-                account.Balance = (float) dataReader.GetDouble(dataReader.GetOrdinal("Balance"));
+                account.Balance = dataReader.GetDecimal(dataReader.GetOrdinal("Balance"));
                 account.OwnerID = dataReader.GetString(dataReader.GetOrdinal("OwnerID"));
 
                 return account;
