@@ -38,11 +38,9 @@ namespace MiniBank.Utils
 
         private void LogIn()
         { 
-            ColorWriter.DisplayPrimary("Enter User ID: ");
-            var userID = Console.ReadLine();
+            var userID = ColorWriter.GetValidInputString("Enter User ID: ");
 
-            ColorWriter.DisplayPrimary("Enter password: ");
-            var password = Console.ReadLine();
+            var password = ColorWriter.GetValidInputString("Enter password: ");
 
             var (status, user, _) = new UserController().GetByID(userID);
 
@@ -66,8 +64,8 @@ namespace MiniBank.Utils
 
         private void LogOut()
         {
-            Logger.Information("User {id} logged out", LoggedUser.ID);
             LoggedUser = null;
+            Logger.Information("User {id} logged out", LoggedUser.ID);
         }
     }
 }

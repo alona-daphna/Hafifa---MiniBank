@@ -56,24 +56,11 @@ namespace MiniBank.Views
             });
         }
 
-        private string GetValidInputString(string prompt)
-        {
-            string? input = null;
-
-            while (string.IsNullOrEmpty(input))
-            {
-                ColorWriter.DisplayPrimary(prompt);
-                input = Console.ReadLine();
-            }
-
-            return input;
-        }
-
         internal void Create()
         {
-            var name = GetValidInputString("Enter your name: ");
+            var name = ColorWriter.GetValidInputString("Enter your name: ");
 
-            var password = GetValidInputString("Create a password: ");
+            var password = ColorWriter.GetValidInputString("Create a password: ");
 
             var hashedPassword = new PasswordManager().HashPassword(password);
 

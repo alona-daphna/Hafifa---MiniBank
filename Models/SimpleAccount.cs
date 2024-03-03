@@ -2,7 +2,7 @@
 {
     internal class SimpleAccount : Account
     {
-        public override void Withdraw(float amount)
+        public override void Withdraw(decimal amount)
         {
             if (Balance - amount < 0)
             {

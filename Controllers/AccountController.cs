@@ -140,13 +140,13 @@ namespace MiniBank.Controllers
         }
 
 
-        internal Response<float> Deposit(string ownerId, string accountId, float amount)
+        internal Response<decimal> Deposit(string ownerId, string accountId, decimal amount)
         {
             var (status, account, error) = GetByID(accountId);
 
             if (status != OperationStatus.Success)
             {
-                return new Response<float> { Status = status, ErrorMessage = error };
+                return new Response<decimal> { Status = status, ErrorMessage = error };
             }
          
             try
@@ -162,22 +162,22 @@ namespace MiniBank.Controllers
             {
                 Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, ownerId);
 
-                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
             catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
             {
-                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
         }
 
 
-        internal Response<float> Withdraw(string ownerId, string accountId, float amount)
+        internal Response<decimal> Withdraw(string ownerId, string accountId, decimal amount)
         {
             var (status, account, error) = GetByID(accountId);
 
             if (status != OperationStatus.Success)
             {
-                return new Response<float> { Status = status, ErrorMessage = error };
+                return new Response<decimal> { Status = status, ErrorMessage = error };
             }
 
             try
@@ -195,16 +195,16 @@ namespace MiniBank.Controllers
             {
                 Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, ownerId);
 
-                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
             }
             catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
             {
-                return new Response<float> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
         }
+        
 
-
-        private Response<float> UpdateBalance(string accountId, float updatedBalance)
+        private Response<decimal> UpdateBalance(string accountId, decimal updatedBalance)
         {
             using var conn = DBConnection.GetConnection();
             conn.Open();
@@ -215,7 +215,7 @@ namespace MiniBank.Controllers
 
             command.ExecuteNonQuery();
 
-            return new Response<float> { Status = OperationStatus.Success, Data = updatedBalance };
+            return new Response<decimal> { Status = OperationStatus.Success, Data = updatedBalance };
         }
     }
 }
