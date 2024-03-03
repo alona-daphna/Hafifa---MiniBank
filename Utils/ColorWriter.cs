@@ -16,5 +16,18 @@ namespace MiniBank.Utils
         internal void DisplaySuccessMessage(string message) => Console.WriteLine(message, Color.LawnGreen);
 
         internal void DisplayPrimary(string message) => Console.WriteLine(message, PrimaryColor);
+
+        internal string GetValidInputString(string prompt)
+        {
+            string? input = null;
+
+            while (string.IsNullOrEmpty(input))
+            {
+                DisplayPrimary(prompt);
+                input = Console.ReadLine();
+            }
+
+            return input;
+        }
     }
 }

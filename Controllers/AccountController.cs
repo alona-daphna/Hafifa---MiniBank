@@ -202,7 +202,7 @@ namespace MiniBank.Controllers
                 return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
         }
-
+        
 
         private Response<decimal> UpdateBalance(string accountId, decimal updatedBalance)
         {
