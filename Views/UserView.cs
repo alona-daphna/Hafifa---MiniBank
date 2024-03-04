@@ -44,6 +44,7 @@ namespace MiniBank.Views
 
                     if (status == Enums.OperationStatus.Success)
                     {
+                        SessionManager.Authenticate();
                         ColorWriter.DisplaySuccessMessage("User deleted successfully.");
                     } else
                     {
@@ -62,8 +63,16 @@ namespace MiniBank.Views
 
             var name = ColorWriter.GetValidInputString("Enter your name: ");
 
-            Console.WriteLine("Enter password: ");
+            ColorWriter.DisplayPrimary("Enter password: ");
             var password = passwordManager.GetPasswordInput();
+            ColorWriter.DisplayPrimary("Retype your password to confirm: ");
+            var retypedPassword = passwordManager.GetPasswordInput();
+
+            if (password != retypedPassword)
+            {
+                Console.WriteLine("Passwords don't match.");
+                return;
+            }
 
             var hashedPassword = passwordManager.HashPassword(password);
 
