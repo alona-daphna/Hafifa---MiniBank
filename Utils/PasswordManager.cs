@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
 
 namespace MiniBank.Utils
 {
@@ -28,6 +23,7 @@ namespace MiniBank.Utils
             return Convert.ToBase64String(hashAndSalt);
         }
 
+
         internal bool VerifyPassword(string password, string hashedPassword) 
         { 
             var hashAndSaltBytes = Convert.FromBase64String(hashedPassword);
@@ -39,6 +35,33 @@ namespace MiniBank.Utils
             var newHash = algo.GetBytes(20);
 
             return hashAndSaltBytes.Skip(16).SequenceEqual(newHash);
+        }
+
+
+        internal string GetPasswordInput()
+        {
+            var password = "";
+            ConsoleKeyInfo key;
+
+            do
+            {
+                key = Console.ReadKey(true);
+
+                if (key.Key == ConsoleKey.Backspace)
+                {
+                    password.Substring(0, password.Length - 1);
+                    Console.Write("\b \b");
+                }
+                else if (key.Key != ConsoleKey.Enter && !char.IsControl(key.KeyChar))
+                {
+                    password += key.KeyChar;
+                    Console.Write("*");
+                }
+            } while (key.Key != ConsoleKey.Enter);
+
+            Console.WriteLine();
+
+            return password;
         }
     }
 }
