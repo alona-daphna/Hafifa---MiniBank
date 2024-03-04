@@ -49,8 +49,17 @@ namespace MiniBank.Utils
             do
             {
                 key = Console.ReadKey(true);
-                password += key.KeyChar;
-                Console.Write("*");
+
+                if (key.Key == ConsoleKey.Backspace)
+                {
+                    password.Substring(0, password.Length - 1);
+                    Console.Write("\b \b");
+                } 
+                else if (key.Key != ConsoleKey.Enter && !char.IsControl(key.KeyChar))
+                {
+                    password += key.KeyChar;
+                    Console.Write("*");
+                }
             } while (key.Key != ConsoleKey.Enter);
 
             Console.WriteLine();
