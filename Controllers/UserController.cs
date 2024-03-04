@@ -1,16 +1,14 @@
-﻿using MiniBank.Converters;
-using MiniBank.Models;
+﻿using MiniBank.Models;
 using Microsoft.Data.SqlClient;
 using MiniBank.Utils;
 using MiniBank.Enums;
 using Serilog;
+using MiniBank.Nhibernate;
 
 namespace MiniBank.Controllers
 {
     internal class UserController
     {
-        private DBConnection DBConnection { get; set; } = new DBConnection();
-        private UserConverter UserConverter { get; set; } = new UserConverter();
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
 

@@ -2,8 +2,8 @@
 {
     internal class User
     {
-        internal string ID { get; set; }
-        internal string Name { get; set; }
-        internal string Password { get; set; }
+        public virtual string ID { get; set; }
+        public virtual string Name { get; set; }
+        public virtual string Password { get; set; }
     }
 }

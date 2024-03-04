@@ -2,16 +2,11 @@
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using Microsoft.Extensions.Configuration;
-using MiniBank.Mappings;
 using MiniBank.Models;
+using MiniBank.Nhibernate.Mappings;
 using NHibernate;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MiniBank.Utils
+namespace MiniBank.Nhibernate
 {
     internal class NhibernateConfig
     {
@@ -25,20 +20,23 @@ namespace MiniBank.Utils
 
             var persistenceModel = AutoMap.AssemblyOf<User>()
                 .Where(t => t == typeof(User))
-                .Conventions.Add<PrimaryKeyConvention>();
+                .Conventions.Add<TableNameConvention>();
+
+
 
             SessionFactory = Fluently.Configure()
-                .Database(MsSqlConfiguration.MsSql2012.ConnectionString(configuration.GetConnectionString("DB")).ShowSql())
-                .Mappings(m => m.AutoMappings.Add(persistenceModel))
+                .Database(MsSqlConfiguration.MsSql2012.ConnectionString(configuration.GetConnectionString("DB")))
+                .Mappings(m =>
+                    {
+                        m.AutoMappings.Add(persistenceModel);
+                        m.FluentMappings.AddFromAssemblyOf<AccountMap>();
+                    })
                 .BuildSessionFactory();
         }
 
         internal static NhibernateConfig GetInstance()
         {
-            if ( instance == null )
-            {
-                instance = new NhibernateConfig();
-            }
+            instance ??= new NhibernateConfig();
 
             return instance;
         }

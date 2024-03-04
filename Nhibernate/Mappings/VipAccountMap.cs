@@ -1,7 +1,7 @@
 ﻿using FluentNHibernate.Mapping;
 using MiniBank.Models;
 
-namespace MiniBank.Mappings
+namespace MiniBank.Nhibernate.Mappings
 {
     internal class VipAccountMap : SubclassMap<VipAccount>
     {
