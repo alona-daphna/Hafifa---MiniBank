@@ -58,11 +58,14 @@ namespace MiniBank.Views
 
         internal void Create()
         {
+            var passwordManager = new PasswordManager();
+
             var name = ColorWriter.GetValidInputString("Enter your name: ");
 
-            var password = ColorWriter.GetValidInputString("Create a password: ");
+            Console.WriteLine("Enter password: ");
+            var password = passwordManager.GetPasswordInput();
 
-            var hashedPassword = new PasswordManager().HashPassword(password);
+            var hashedPassword = passwordManager.HashPassword(password);
 
             var (status, id, error) = UserController.Create(name, hashedPassword);
 

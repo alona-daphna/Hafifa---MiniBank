@@ -40,5 +40,22 @@ namespace MiniBank.Utils
 
             return hashAndSaltBytes.Skip(16).SequenceEqual(newHash);
         }
+
+        internal string GetPasswordInput()
+        {
+            var password = "";
+            ConsoleKeyInfo key;
+
+            do
+            {
+                key = Console.ReadKey(true);
+                password += key.KeyChar;
+                Console.Write("*");
+            } while (key.Key != ConsoleKey.Enter);
+
+            Console.WriteLine();
+
+            return password;
+        }
     }
 }

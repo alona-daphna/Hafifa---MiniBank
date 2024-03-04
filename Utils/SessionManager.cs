@@ -38,15 +38,18 @@ namespace MiniBank.Utils
 
         private void LogIn()
         { 
+            var passwordManager = new PasswordManager();
             var userID = ColorWriter.GetValidInputString("Enter User ID: ");
 
-            var password = ColorWriter.GetValidInputString("Enter password: ");
+            Console.WriteLine("Enter password: ");
+            var password = passwordManager.GetPasswordInput();
+
 
             var (status, user, _) = new UserController().GetByID(userID);
 
             if (status == Enums.OperationStatus.Success)
             {
-                if (new PasswordManager().VerifyPassword(password, user.Password))
+                if (passwordManager.VerifyPassword(password, user.Password))
                 {
                     LoggedUser = user;
                     Logger.Information("User {id} logged in", user.ID);
@@ -64,8 +67,8 @@ namespace MiniBank.Utils
 
         private void LogOut()
         {
-            LoggedUser = null;
             Logger.Information("User {id} logged out", LoggedUser.ID);
+            LoggedUser = null;
         }
     }
 }
