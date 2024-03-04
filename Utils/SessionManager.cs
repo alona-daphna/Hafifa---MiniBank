@@ -42,13 +42,13 @@ namespace MiniBank.Utils
             
             var userID = ColorWriter.GetValidInputString("Enter User ID: ");
 
-            ColorWriter.DisplayPrimary("Create a password: ");
-            var password = passwordManager.GetPasswordInput();
-
             var (status, user, _) = new UserController().GetByID(userID);
 
             if (status == Enums.OperationStatus.Success)
             {
+                ColorWriter.DisplayPrimary("Create a password: ");
+                var password = passwordManager.GetPasswordInput();
+
                 if (passwordManager.VerifyPassword(password, user.Password))
                 {
                     LoggedUser = user;
