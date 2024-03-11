@@ -4,6 +4,7 @@ using MiniBank.Utils;
 using MiniBank.Enums;
 using Serilog;
 using MiniBank.Nhibernate;
+using MiniBank.Exceptions;
 
 namespace MiniBank.Controllers
 {
@@ -12,7 +13,7 @@ namespace MiniBank.Controllers
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
 
-        internal Response<string?> Create(string name, string password) 
+        internal string Create(string name, string password) 
         {
             try
             {
@@ -28,82 +29,69 @@ namespace MiniBank.Controllers
 
                 Logger.Information("Created a new user with ID {id}", id);
 
-                return new Response<string?> { Status = OperationStatus.Success, Data = id };
+                return id;
             }
             catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in creating user.");
 
-                return new Response<string?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
-        internal Response<User?> Delete(string id) 
+        internal void Delete(string id) 
         {
             try
             {
-                using (var session = NhibernateConfig.SessionFactory.OpenSession())
-                {
-                    var transaction = session.BeginTransaction();
-                    var user = session.Get<User?>(id);
+                using var session = NhibernateConfig.SessionFactory.OpenSession();
+                var transaction = session.BeginTransaction();
+                var user = GetByID(id);
 
-                    if (user == null)
-                    {
-                        return new Response<User?> { Status = OperationStatus.NotFound };
-                    }
+                session.Delete(user);
+                transaction.Commit();
 
-                    session.Delete(user);
-                    transaction.Commit();
-
-                    Logger.Information("Deleted user with ID {id}", id);
-
-                    return new Response<User?> { Status = OperationStatus.Success };
-                }
+                Logger.Information("Deleted user with ID {id}", id);
             }
             catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in deleting user with ID {id}", id);
 
-                return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
-        internal Response<List<User?>> GetAll() 
+        internal List<User> GetAll() 
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var users = session.Query<User?>().ToList();
+                var users = session.Query<User>().ToList();
 
-                return new Response<List<User?>> { Status = OperationStatus.Success, Data = users };
-            } catch (SqlException ex)
+                return users;
+            }
+            catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in retrieving users");
 
-                return new Response<List<User?>> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
 
-        internal Response<User?> GetByID(string id) 
+        internal User GetByID(string id) 
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var user = session.Get<User?>(id);
+                var user = session.Get<User?>(id) ?? throw new NotFoundException("User not found");
 
-                if (user == null)
-                {
-                    return new Response<User?> { Status = OperationStatus.NotFound };
-                }
-
-                return new Response<User?> { Status = OperationStatus.Success, Data = user };
+                return user;
 
             } catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in retrieving user with ID {id}", id);
 
-                return new Response<User?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
     }

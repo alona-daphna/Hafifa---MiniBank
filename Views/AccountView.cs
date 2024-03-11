@@ -15,21 +15,14 @@ namespace MiniBank.Views
         {
             SessionManager.Authorize(() =>
             {
-                var (status, accounts, error) = AccountController.GetByOwnerId(SessionManager.LoggedUser.ID);
+                var accounts = AccountController.GetByOwnerId(SessionManager.LoggedUser.ID);
 
-                if (status == OperationStatus.Success)
+                if (accounts.Count == 0)
                 {
-                    if (accounts.Count == 0)
-                    {
-                        Console.WriteLine("User do not own any accounts. Consider creating one.");
-                    }
-
-                    accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
-                } else
-                {
-                    ColorWriter.DisplayErrorMessage(error);
+                    Console.WriteLine("User do not own any accounts. Consider creating one.");
                 }
 
+                accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
             });
         }
 
@@ -44,15 +37,9 @@ namespace MiniBank.Views
 
                 if (int.TryParse(accountType, out var type)) 
                 {
-                    var (status, id, error) = AccountController.Create(SessionManager.LoggedUser.ID, type);
+                    var id = AccountController.Create(SessionManager.LoggedUser.ID, type);
 
-                    if (status == OperationStatus.Success)
-                    {
-                        ColorWriter.DisplaySuccessMessage($"Account created successfully. Your new account ID is {id}");
-                    } else
-                    {
-                        ColorWriter.DisplayErrorMessage(error);
-                    }
+                    ColorWriter.DisplaySuccessMessage($"Account created successfully. Your new account ID is {id}");
                 } else
                 {
                     ColorWriter.DisplayErrorMessage("Invalid account type.");
@@ -68,15 +55,9 @@ namespace MiniBank.Views
                 ColorWriter.DisplayPrimary("Enter account ID: ");
                 var accountID = Console.ReadLine();
 
-                var (status, _, error) = AccountController.Delete(SessionManager.LoggedUser.ID, accountID);
+                AccountController.Delete(SessionManager.LoggedUser.ID, accountID);
 
-                if (status == OperationStatus.Success)
-                {
-                    ColorWriter.DisplaySuccessMessage("Account deleted successfully.");
-                } else
-                {
-                    ColorWriter.DisplayErrorMessage(status == OperationStatus.NotFound ? "Account does not exist." : error);
-                }
+                ColorWriter.DisplaySuccessMessage("Account deleted successfully.");
             });
         }
 
@@ -88,15 +69,8 @@ namespace MiniBank.Views
                 try
                 {
                     var (accountID, amount) = UpdateBalancePrompts();
-                    var (status, balance, error) = AccountController.Deposit(SessionManager.LoggedUser.ID, accountID, amount);
-
-                    if (status == OperationStatus.Success)
-                    {
-                        ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance.ToString("0.00")}");
-                    } else
-                    {
-                        ColorWriter.DisplayErrorMessage(error);
-                    }
+                    var balance = AccountController.Deposit(SessionManager.LoggedUser.ID, accountID, amount);
+                    ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance:0.00}");
                 } catch (ArgumentException ex)
                 {
                     ColorWriter.DisplayErrorMessage(ex.Message);
@@ -112,16 +86,8 @@ namespace MiniBank.Views
                 try
                 {
                     var (account, amount) = UpdateBalancePrompts();
-                    var (status, balance, error) = AccountController.Withdraw(SessionManager.LoggedUser.ID, account, amount);
-
-                    if (status == OperationStatus.Success)
-                    {
-                        ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance.ToString("0.00")}");
-                    }
-                    else
-                    {
-                        ColorWriter.DisplayErrorMessage(error);
-                    }
+                    var balance = AccountController.Withdraw(SessionManager.LoggedUser.ID, account, amount);
+                    ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance:0.00}");
                 }
                 catch (ArgumentException ex)
                 {
@@ -138,11 +104,7 @@ namespace MiniBank.Views
         {
             ColorWriter.DisplayPrimary("Enter account ID: ");
             var accountID = Console.ReadLine();
-
-            if (AccountController.GetByID(accountID).Status == OperationStatus.NotFound)
-            {
-                throw new ArgumentException("Account does not exist.");
-            }
+            if (string.IsNullOrEmpty(accountID)) throw new ArgumentException("Invalid account ID");
 
             ColorWriter.DisplayPrimary("Enter amount: ");
             var amount = decimal.TryParse(Console.ReadLine(), out decimal value) ? value : throw new ArgumentException("Invalid amount.");

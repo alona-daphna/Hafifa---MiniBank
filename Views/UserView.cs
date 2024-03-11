@@ -13,21 +13,14 @@ namespace MiniBank.Views
 
         internal void ListUsers()
         {
-            var (status, users, error) = UserController.GetAll();
+            var users = UserController.GetAll();
 
-            if (status == Enums.OperationStatus.Success)
+            if (users.Count == 0)
             {
-                if (users.Count == 0)
-                {
-                    Console.WriteLine("No users exist in the bank.");
-                }
+                Console.WriteLine("No users exist in the bank.");
+            }
             
-                users.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} \t {x.Name}"));
-            }
-            else
-            {
-                ColorWriter.DisplayErrorMessage(error);
-            }
+            users.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} \t {x.Name}"));
         }
 
 
@@ -40,16 +33,10 @@ namespace MiniBank.Views
 
                 if (input == "y")
                 {
-                    var (status, _, error) = UserController.Delete(SessionManager.LoggedUser.ID);
+                    UserController.Delete(SessionManager.LoggedUser.ID);
 
-                    if (status == Enums.OperationStatus.Success)
-                    {
-                        SessionManager.Authenticate();
-                        ColorWriter.DisplaySuccessMessage("User deleted successfully.");
-                    } else
-                    {
-                        ColorWriter.DisplayErrorMessage(error);
-                    }
+                    SessionManager.Authenticate();
+                    ColorWriter.DisplaySuccessMessage("User deleted successfully.");
                 } else
                 {
                     Console.WriteLine("Deletion aborted.");
@@ -76,15 +63,9 @@ namespace MiniBank.Views
 
             var hashedPassword = passwordManager.HashPassword(password);
 
-            var (status, id, error) = UserController.Create(name, hashedPassword);
+            var id = UserController.Create(name, hashedPassword);
 
-            if (status == Enums.OperationStatus.Success)
-            {
-                ColorWriter.DisplaySuccessMessage($"User created successfully. Your ID is: {id}");
-            } else
-            {
-                ColorWriter.DisplayErrorMessage(error);
-            }
+            ColorWriter.DisplaySuccessMessage($"User created successfully. Your ID is: {id}");
         }
     }
 }

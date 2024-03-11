@@ -1,4 +1,6 @@
-﻿namespace MiniBank.Models
+﻿using MiniBank.Exceptions;
+
+namespace MiniBank.Models
 {
     internal abstract class Account
     {
@@ -22,14 +24,14 @@
 
         private void PreventOverflow(decimal amount)
         {
-            if (amount > MaxBalance) throw new ArgumentException("Amount exceeds limit");
+            if (amount > MaxBalance) throw new InvalidAmountException("Amount exceeds limit");
         }
 
         private void EnsureAmountPositive(decimal amount)
         {
             if (amount <= 0)
             {
-                throw new ArgumentException("Amount must be positive.");
+                throw new InvalidAmountException("Amount must be positive.");
             }
         }
 

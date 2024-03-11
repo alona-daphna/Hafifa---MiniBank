@@ -1,4 +1,6 @@
-﻿using MiniBank.Enums;
+﻿using Microsoft.Data.SqlClient;
+using MiniBank.Enums;
+using MiniBank.Exceptions;
 using MiniBank.Utils;
 using System.Drawing;
 using Console = Colorful.Console;
@@ -37,8 +39,7 @@ namespace MiniBank.Views
         internal void Start()
         {
             Console.WriteAscii("MiniBank", ColorWriter.PrimaryColor);
-
-            var exitCondition = false;
+            MenuAction action;
 
             do
             {
@@ -46,15 +47,11 @@ namespace MiniBank.Views
                 PrintPrompt();
                 var input = Console.ReadLine();
 
-                if (TryParseAction(input, out MenuAction action))
+                if (TryParseAction(input, out action))
                 {
-                    if (action == MenuAction.Exit)
+                    if (action != MenuAction.Exit)
                     {
-                        exitCondition = true;
-                    }
-                    else
-                    {
-                        Actions[action].action();
+                        TryAction(action);
                     }
                 }
                 else
@@ -62,7 +59,28 @@ namespace MiniBank.Views
                     ColorWriter.DisplayErrorMessage("Invalid action.");
                 }
 
-            } while (!exitCondition);
+            } while (action  != MenuAction.Exit);
+        }
+
+
+        private void TryAction(MenuAction action)
+        {
+            try
+            {
+                Actions[action].action();
+
+            } catch (SqlException)
+            {
+                ColorWriter.DisplayErrorMessage("An error occurred unexpectedly. Please try again later.");
+            }
+            catch (Exception ex) when
+                ( ex is UnauthorizedAccessException 
+                | ex is ForeignKeyConstraintException 
+                | ex is InvalidAmountException 
+                | ex is NotFoundException)
+            {
+                ColorWriter.DisplayErrorMessage(ex.Message);
+            }
         }
 
 

@@ -42,25 +42,19 @@ namespace MiniBank.Utils
             
             var userID = ColorWriter.GetValidInputString("Enter User ID: ");
 
-            var (status, user, _) = new UserController().GetByID(userID);
+            var user = new UserController().GetByID(userID);
 
-            if (status == Enums.OperationStatus.Success)
+            ColorWriter.DisplayPrimary("Enter your password: ");
+            var password = passwordManager.GetPasswordInput();
+
+            if (passwordManager.VerifyPassword(password, user.Password))
             {
-                ColorWriter.DisplayPrimary("Create a password: ");
-                var password = passwordManager.GetPasswordInput();
-
-                if (passwordManager.VerifyPassword(password, user.Password))
-                {
-                    LoggedUser = user;
-                    Logger.Information("User {id} logged in", user.ID);
-                } else
-                {
-                    Logger.Information("Failed login attempt for user {id}", user.ID);
-                    ColorWriter.DisplayErrorMessage("Incorrect password.");
-                }
+                LoggedUser = user;
+                Logger.Information("User {id} logged in", user.ID);
             } else
             {
-                ColorWriter.DisplayErrorMessage("User does not exist.");
+                Logger.Information("Failed login attempt for user {id}", user.ID);
+                ColorWriter.DisplayErrorMessage("Incorrect password.");
             }
         }
 

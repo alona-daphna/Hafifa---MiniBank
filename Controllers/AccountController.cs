@@ -4,6 +4,7 @@ using MiniBank.Utils;
 using MiniBank.Enums;
 using Serilog;
 using MiniBank.Nhibernate;
+using MiniBank.Exceptions;
 
 namespace MiniBank.Controllers
 {
@@ -12,7 +13,7 @@ namespace MiniBank.Controllers
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
 
-        internal Response<List<Account>> GetByOwnerId(string id)
+        internal List<Account> GetByOwnerId(string id)
         {
             var accounts = new List<Account>();
 
@@ -23,73 +24,58 @@ namespace MiniBank.Controllers
 
                 Logger.Information("user {id} retrieves accounts", id);
 
-                return new Response<List<Account>> { Status = OperationStatus.Success, Data = accounts };
+                return accounts;
             } catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in retrieving accounts");
 
-                return new Response<List<Account>> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
         
 
-        internal Response<Account> GetByID(string id)
+        internal Account GetByID(string id)
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
                 var account = session.Get<Account>(id);
 
-                if (account == null)
-                {
-                    return new Response<Account> { Status = OperationStatus.NotFound };
-                }
-
-                return new Response<Account> { Status = OperationStatus.Success, Data = account };
-            } catch (SqlException ex)
+                return account ?? throw new NotFoundException("Account not found");
+            }
+            catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in retrieving account with ID {id}", id);
 
-                return new Response<Account> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
 
-        internal Response<Account?> Delete(string ownerId, string accountId)
+        internal void Delete(string ownerId, string accountId)
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
                 var transaction = session.BeginTransaction();
-                var account = session.Get<Account?>(accountId);
-
-                if (account == null)
-                {
-                    return new Response<Account?> { Status = OperationStatus.NotFound };
-                }
+                var account = session.Get<Account?>(accountId) ?? throw new NotFoundException();
 
                 account.EnsureOwnership(ownerId);
                 session.Delete(account);
                 transaction.Commit();
 
                 Logger.Information("account {accountId} got deleted by {ownerId}", accountId, ownerId);
-
-                return new Response<Account?> { Status = OperationStatus.Success };
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
             }
             catch (SqlException ex)
             {
                 Logger.Error(ex, "Error in deleting account {accountId} owned by {ownerId}", accountId, ownerId);
 
-                return new Response<Account?> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
 
-        internal Response<string> Create(string ownerId, int type)
+        internal string Create(string ownerId, int type)
         {
             try
             {
@@ -107,24 +93,24 @@ namespace MiniBank.Controllers
                     transaction.Commit();
                 }
 
-                    Logger.Information("Created account for user {ownerId}", ownerId);
+                Logger.Information("Created account for user {ownerId}", ownerId);
 
-                return new Response<string> { Status = OperationStatus.Success, Data = id };
+                return id;
             } catch (SqlException ex)
             {
                 if (ex.Number == 547)
                 {
-                   return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "Invalid account type." };
+                   throw new ForeignKeyConstraintException("Invalid account type.");
                 }
 
                 Logger.Error(ex, "Error in creating account of type {type} for user {ownerId}", type, ownerId);
 
-                return new Response<string> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
+                throw;
             }
         }
 
 
-        internal Response<decimal> Deposit(string ownerId, string accountId, decimal amount)
+        internal decimal Deposit(string ownerId, string accountId, decimal amount)
         {
             try
             {
@@ -134,16 +120,12 @@ namespace MiniBank.Controllers
             {
                 Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, ownerId);
 
-                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
-            }
-            catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
-            {
-                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+                throw;
             }
         }
 
 
-        internal Response<decimal> Withdraw(string ownerId, string accountId, decimal amount)
+        internal decimal Withdraw(string ownerId, string accountId, decimal amount)
         { 
             try
             {
@@ -153,25 +135,16 @@ namespace MiniBank.Controllers
             {
                 Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, ownerId);
 
-                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = "An error occurred unexpectedly. Please try again later." };
-            }
-            catch (Exception ex) when (ex is UnauthorizedAccessException or ArgumentException)
-            {
-                return new Response<decimal> { Status = OperationStatus.Error, ErrorMessage = ex.Message };
+                throw;
             }
         }
         
 
-        private Response<decimal> UpdateBalance(string accountId, string ownerId, decimal amount, MenuAction action)
+        private decimal UpdateBalance(string accountId, string ownerId, decimal amount, MenuAction action)
         {
             using var session = NhibernateConfig.SessionFactory.OpenSession();
             using var transaction = session.BeginTransaction();
-            var account = session.Get<Account>(accountId);
-
-            if (account == null)
-            {
-                return new Response<decimal> { Status = OperationStatus.NotFound };
-            }
+            var account = session.Get<Account>(accountId) ?? throw new NotFoundException();
 
             account.EnsureOwnership(ownerId);
 
@@ -193,7 +166,7 @@ namespace MiniBank.Controllers
 
             Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, accountId, ownerId);
 
-            return new Response<decimal> { Status = OperationStatus.Success, Data = account.Balance };
+            return account.Balance;
         }
     }
 }
