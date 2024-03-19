@@ -14,5 +14,10 @@ namespace MiniBank.Models
             Balance = 0;
             Owner = owner;
         }
+
+        protected Account()
+        {
+            
+        }
     }
 }

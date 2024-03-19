@@ -20,7 +20,7 @@ namespace MiniBank.Views
                 Console.WriteLine("No users exist in the bank.");
             }
             
-            users.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} \t {x.Name}"));
+            users.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} \t {x.Username}"));
         }
 
 

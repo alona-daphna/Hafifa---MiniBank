@@ -14,24 +14,19 @@ namespace MiniBank.Controllers
 
         private decimal MaxBalance { get; set; } = 100000000000000;
 
-        internal List<Account> GetByOwnerId(string id)
+        internal IList<Account> GetByOwnerId(string id)
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var user = session.Get<User>(id);
-
-                if (user == null)
-                {
-                    throw new NotFoundException("User not found");
-                }
-
+                var user = session.Get<User>(id) ?? throw new NotFoundException("User not found");
                 var accounts = user.Accounts;
 
                 Logger.Information("user {id} retrieves accounts", id);
 
                 return accounts;
-            } catch (SqlException ex)
+            }
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in retrieving accounts");
 
@@ -48,7 +43,7 @@ namespace MiniBank.Controllers
 
                 return account ?? throw new NotFoundException("Account not found");
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in retrieving account with ID {id}", id);
 
@@ -70,7 +65,7 @@ namespace MiniBank.Controllers
 
                 Logger.Information("account {accountId} got deleted by {ownerId}", accountId, ownerId);
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in deleting account {accountId} owned by {ownerId}", accountId, ownerId);
 
@@ -113,7 +108,7 @@ namespace MiniBank.Controllers
             {
                 return UpdateBalance(accountId, ownerId, amount, (account, amount) => account.Balance += amount, "Deposited");
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, ownerId);
 
@@ -131,7 +126,7 @@ namespace MiniBank.Controllers
                     account.Balance -= amount; 
                 }, "Withdrew");
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, ownerId);
 

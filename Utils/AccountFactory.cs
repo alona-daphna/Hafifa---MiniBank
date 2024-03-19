@@ -12,7 +12,7 @@ namespace MiniBank.Utils
             AccountCreators = new Dictionary<int, (Func<User, Account>, string)>
             {
                 {1, ((owner) => new SimpleAccount(owner), "Simple") },
-                {2, ((owner) => new VipAccount(), "VIP") },
+                {2, ((owner) => new VipAccount(owner), "VIP") },
             };
         }
 

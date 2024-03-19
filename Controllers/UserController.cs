@@ -1,7 +1,5 @@
 ﻿using MiniBank.Models;
-using Microsoft.Data.SqlClient;
 using MiniBank.Utils;
-using MiniBank.Enums;
 using Serilog;
 using MiniBank.Nhibernate;
 using MiniBank.Exceptions;
@@ -27,7 +25,7 @@ namespace MiniBank.Controllers
 
                 return user.ID;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in creating user.");
 
@@ -48,7 +46,7 @@ namespace MiniBank.Controllers
 
                 Logger.Information("Deleted user with ID {id}", id);
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in deleting user with ID {id}", id);
 
@@ -65,7 +63,7 @@ namespace MiniBank.Controllers
 
                 return users;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in retrieving users");
 
@@ -83,7 +81,7 @@ namespace MiniBank.Controllers
 
                 return user;
 
-            } catch (SqlException ex)
+            } catch (Exception ex)
             {
                 Logger.Error(ex, "Error in retrieving user with ID {id}", id);
 

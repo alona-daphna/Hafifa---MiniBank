@@ -102,7 +102,7 @@ namespace MiniBank.Views
         }
 
 
-        private void PrintPrompt() => Console.Write("(" + (SessionManager.IsUserLoggedIn ? SessionManager.LoggedUser.Name : "guest") + ")@MiniBank: ");
+        private void PrintPrompt() => Console.Write("(" + (SessionManager.IsUserLoggedIn ? SessionManager.LoggedUser.Username : "guest") + ")@MiniBank: ");
 
 
         private bool TryParseAction(string input, out MenuAction action) => Enum.TryParse(input, out action) && Enum.IsDefined(typeof(MenuAction), action);
