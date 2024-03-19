@@ -12,7 +12,7 @@ namespace MiniBank.Views
         private AccountView AccountView { get; set; }
         private UserView UserView { get; set; }
         private ColorWriter ColorWriter { get; set; }
-        private Dictionary<MenuAction, (Action action, Func<string> description, bool guestsAllowed)> Actions { get; set; }
+        private Dictionary<MenuAction, (Action action, Func<string> description, bool loginRequired)> Actions { get; set; }
         private SessionManager SessionManager { get; set; }
 
         public BankView()
@@ -23,15 +23,15 @@ namespace MiniBank.Views
             UserView = new UserView(SessionManager);
             Actions = new Dictionary<MenuAction, (Action, Func<string>, bool)>()
             {
-                { MenuAction.ListAccountsByOwner, (AccountView.ListAccounts, () => "LIST ACCOUNTS", false) },
-                { MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS", true )},
-                { MenuAction.CreateUser, (UserView.Create, () => "CREATE USER", true)},
-                { MenuAction.DeleteUser, (UserView.Delete, () => "DELETE USER", false) },
-                { MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT", false) },
-                { MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT", false) },
-                { MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT", false) },
-                { MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW", false) },
-                { MenuAction.Auth, (SessionManager.Authenticate, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN", true) },
+                { MenuAction.ListAccountsByOwner, (AccountView.ListAccounts, () => "LIST ACCOUNTS", true) },
+                { MenuAction.ListUsers, (UserView.ListUsers, () => "LIST USERS", false )},
+                { MenuAction.CreateUser, (UserView.Create, () => "CREATE USER", false)},
+                { MenuAction.DeleteUser, (UserView.Delete, () => "DELETE USER", true) },
+                { MenuAction.CreateAccount, (AccountView.CreateAccount, () => "CREATE ACCOUNT", true) },
+                { MenuAction.DeleteAccount, (AccountView.DeleteAccount, () => "DELETE ACCOUNT", true) },
+                { MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT", true) },
+                { MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW", true) },
+                { MenuAction.Auth, (SessionManager.Authenticate, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN", false) },
             };
         }
 
@@ -89,7 +89,7 @@ namespace MiniBank.Views
             ColorWriter.DisplayPrimary("############### MENU ###############");
             Actions.ToList().ForEach(action =>
             {
-                if (SessionManager.IsUserLoggedIn || action.Value.guestsAllowed)
+                if (SessionManager.IsUserLoggedIn || !action.Value.loginRequired)
                 {
                     ColorWriter.DisplayPrimary($"{(int)action.Key} \t {action.Value.description()}");
                 } else
