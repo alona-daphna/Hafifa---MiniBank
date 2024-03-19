@@ -13,7 +13,7 @@ namespace MiniBank.Controllers
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
 
-        internal string Create(string name, string password) 
+        internal string Create(string username, string password) 
         {
             try
             {
@@ -22,7 +22,7 @@ namespace MiniBank.Controllers
                 using (var session = NhibernateConfig.SessionFactory.OpenSession())
                 {
                     using var transaction = session.BeginTransaction();
-                    var user = new User { ID = id, Name = name, Password = password };
+                    var user = new User(username, password);
                     session.Save(user);
                     transaction.Commit();
                 }

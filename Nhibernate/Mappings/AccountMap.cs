@@ -12,8 +12,8 @@ namespace MiniBank.Nhibernate.Mappings
             DiscriminateSubClassesOnColumn("Type");
 
             Id(x => x.ID);
-            Map(x => x.OwnerID);
             Map(x => x.Balance);
+            References(x => x.Owner, "OwnerId");
         }
     }
 }

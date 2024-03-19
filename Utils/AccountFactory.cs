@@ -1,23 +1,24 @@
 ﻿using MiniBank.Models;
+using NHibernate.Mapping.ByCode.Impl;
 
 namespace MiniBank.Utils
 {
     internal class AccountFactory
     {
-        public Dictionary<int, (Func<Account> creator, string name)> AccountCreators { get; set; }
+        public Dictionary<int, (Func<User, Account> creator, string name)> AccountCreators { get; set; }
 
         public AccountFactory()
         {
-            AccountCreators = new Dictionary<int, (Func<Account>, string)>
+            AccountCreators = new Dictionary<int, (Func<User, Account>, string)>
             {
-                {1, (() => new SimpleAccount(), "Simple") },
-                {2, (() => new VipAccount(), "VIP") },
+                {1, ((owner) => new SimpleAccount(owner), "Simple") },
+                {2, ((owner) => new VipAccount(), "VIP") },
             };
         }
 
 
-        public Account Create(int type) => AccountCreators.TryGetValue(type, out var creatorInfo)
-            ? creatorInfo.creator() 
+        public Account Create(int type, User owner) => AccountCreators.TryGetValue(type, out var creatorInfo)
+            ? creatorInfo.creator(owner) 
             : throw new ArgumentException("Invalid account type.");
     }
 }

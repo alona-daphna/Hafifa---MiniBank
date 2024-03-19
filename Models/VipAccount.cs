@@ -2,5 +2,6 @@
 {
     internal class VipAccount : Account
     {
+        public VipAccount(User owner) : base(owner) { }
     }
 }

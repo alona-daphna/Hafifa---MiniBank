@@ -10,7 +10,7 @@ namespace MiniBank.Nhibernate
 {
     internal class NhibernateConfig
     {
-        private static NhibernateConfig instance;
+        private static NhibernateConfig? instance;
         internal ISessionFactory SessionFactory { get; set; }
 
 
