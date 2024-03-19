@@ -17,19 +17,15 @@ namespace MiniBank.Controllers
         {
             try
             {
-                var id = Guid.NewGuid().ToString();
+                using var session = NhibernateConfig.SessionFactory.OpenSession();
+                using var transaction = session.BeginTransaction();
+                var user = new User(username, password);
+                session.Save(user);
+                transaction.Commit();
 
-                using (var session = NhibernateConfig.SessionFactory.OpenSession())
-                {
-                    using var transaction = session.BeginTransaction();
-                    var user = new User(username, password);
-                    session.Save(user);
-                    transaction.Commit();
-                }
+                Logger.Information("Created a new user with ID {id}", user.ID);
 
-                Logger.Information("Created a new user with ID {id}", id);
-
-                return id;
+                return user.ID;
             }
             catch (SqlException ex)
             {

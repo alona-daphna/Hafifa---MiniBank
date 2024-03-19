@@ -32,6 +32,7 @@ namespace MiniBank.Views
                 { MenuAction.Deposit, (AccountView.Deposit, () => "DEPOSIT", true) },
                 { MenuAction.Withdraw, (AccountView.Withdraw, () => "WITHDRAW", true) },
                 { MenuAction.Auth, (SessionManager.Authenticate, () => SessionManager.IsUserLoggedIn ? "LOGOUT" : "LOGIN", false) },
+                { MenuAction.Exit, (() => System.Environment.Exit(0), () => "EXIT", false) },
             };
         }
 
@@ -49,10 +50,7 @@ namespace MiniBank.Views
 
                 if (TryParseAction(input, out action))
                 {
-                    if (action != MenuAction.Exit)
-                    {
-                        TryAction(action);
-                    }
+                    TryAction(action);
                 }
                 else
                 {
@@ -69,17 +67,19 @@ namespace MiniBank.Views
             {
                 Actions[action].action();
 
-            } catch (SqlException)
-            {
-                ColorWriter.DisplayErrorMessage("An error occurred unexpectedly. Please try again later.");
             }
             catch (Exception ex) when
                 ( ex is UnauthorizedAccessException 
                 | ex is ForeignKeyConstraintException 
                 | ex is InvalidAmountException 
+                | ex is UnauthorizedOperationException 
                 | ex is NotFoundException)
             {
                 ColorWriter.DisplayErrorMessage(ex.Message);
+            }
+            catch (Exception)
+            {
+                ColorWriter.DisplayErrorMessage("An error occurred unexpectedly. Please try again later.");
             }
         }
 
@@ -98,7 +98,6 @@ namespace MiniBank.Views
                 }
             });
 
-            ColorWriter.DisplayPrimary($"{(int)MenuAction.Exit} \t EXIT");
             ColorWriter.DisplayPrimary("####################################");
         }
 

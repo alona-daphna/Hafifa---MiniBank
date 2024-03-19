@@ -1,7 +1,6 @@
 ﻿namespace MiniBank.Models
 {
-    internal class VipAccount : Account
+    internal class VipAccount(User owner) : Account(owner)
     {
-        public VipAccount(User owner) : base(owner) { }
     }
 }
