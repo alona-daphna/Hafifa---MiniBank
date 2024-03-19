@@ -22,7 +22,7 @@ namespace MiniBank.Views
                     Console.WriteLine("User do not own any accounts. Consider creating one.");
                 }
 
-                accounts.ToList().ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
+                accounts.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} --> Balance: {x.Balance}"));
             });
         }
 

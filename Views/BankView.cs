@@ -77,8 +77,9 @@ namespace MiniBank.Views
             {
                 ColorWriter.DisplayErrorMessage(ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 ColorWriter.DisplayErrorMessage("An error occurred unexpectedly. Please try again later.");
             }
         }

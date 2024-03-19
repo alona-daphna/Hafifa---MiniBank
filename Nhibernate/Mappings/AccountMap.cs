@@ -13,7 +13,7 @@ namespace MiniBank.Nhibernate.Mappings
 
             Id(x => x.ID);
             Map(x => x.Balance);
-            References(x => x.Owner, "OwnerId");
+            References(x => x.Owner, "UserID");
         }
     }
 }

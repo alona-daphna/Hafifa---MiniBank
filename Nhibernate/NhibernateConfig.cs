@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using MiniBank.Models;
 using MiniBank.Nhibernate.Mappings;
 using NHibernate;
+using System.Security.Policy;
 
 namespace MiniBank.Nhibernate
 {
@@ -20,6 +21,7 @@ namespace MiniBank.Nhibernate
 
             var persistenceModel = AutoMap.AssemblyOf<User>()
                 .Where(t => t == typeof(User))
+                .Override<User>(map => map.HasMany(x => x.Accounts).Cascade.AllDeleteOrphan().Inverse())
                 .Conventions.Add<TableNameConvention>();
 
 

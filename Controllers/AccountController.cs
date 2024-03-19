@@ -4,6 +4,7 @@ using MiniBank.Utils;
 using Serilog;
 using MiniBank.Nhibernate;
 using MiniBank.Exceptions;
+using NHibernate.Linq;
 
 namespace MiniBank.Controllers
 {
@@ -14,17 +15,19 @@ namespace MiniBank.Controllers
 
         private decimal MaxBalance { get; set; } = 100000000000000;
 
-        internal IList<Account> GetByOwnerId(string id)
+        internal List<Account> GetByOwnerId(string id)
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var user = session.Get<User>(id) ?? throw new NotFoundException("User not found");
-                var accounts = user.Accounts;
+                using (var session = NhibernateConfig.SessionFactory.OpenSession())
+                {
+                    var user = session.Query<User>().Where(u => u.ID == id).Fetch(u => u.Accounts).SingleOrDefault() ?? throw new NotFoundException("User not found");
+                    var accounts = user.Accounts;
 
-                Logger.Information("user {id} retrieves accounts", id);
+                    Logger.Information("user {id} retrieves accounts", id);
 
-                return accounts;
+                    return [.. accounts];
+                }
             }
             catch (Exception ex)
             {
