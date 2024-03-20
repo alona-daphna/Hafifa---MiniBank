@@ -105,6 +105,7 @@ namespace MiniBank.Views
             ColorWriter.DisplayPrimary("Enter last four digits of account ID: ");
             var accountIdLastFour = Console.ReadLine();
             if (string.IsNullOrEmpty(accountIdLastFour)) throw new ArgumentException("Invalid account ID");
+            AccountController.GetByLastFourAndOwner(SessionManager.LoggedUser.Username, accountIdLastFour);
 
             ColorWriter.DisplayPrimary("Enter amount: ");
             var amount = decimal.TryParse(Console.ReadLine(), out decimal value) ? value : throw new ArgumentException("Invalid amount.");

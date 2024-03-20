@@ -49,6 +49,21 @@ namespace MiniBank.Controllers
             }
         }
 
+        internal Account GetByLastFourAndOwner(string username, string accountIdLastFour)
+        {
+            try
+            {
+                var user = BaseController.GetByPredicateEagerlyLoad<User>(u => u.Username == username, u => u.Accounts).SingleOrDefault();
+                return user.Accounts.FirstOrDefault(a => a.ID.EndsWith(accountIdLastFour)) ?? throw new NotFoundException("Account does not exist.");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error in retrieving account with last four digits {lastFour}", accountIdLastFour);
+
+                throw;
+            }
+        }
+
         internal void Delete(string owner, string accountId)
         {
             try
@@ -126,14 +141,11 @@ namespace MiniBank.Controllers
         private decimal UpdateBalance(string accountIdLastFour, string owner, decimal amount, Action<Account, decimal> updateBalance, string actionText)
         {
 
-            var user = BaseController.GetByPredicateEagerlyLoad<User>(user => user.Username == owner, user => user.Accounts).FirstOrDefault();
-            Console.WriteLine(user.Username);
-            var account = user.Accounts.FirstOrDefault(a => a.ID.EndsWith(accountIdLastFour)) ?? throw new NotFoundException();
+            var account = GetByLastFourAndOwner(owner, accountIdLastFour);
 
             EnsureAmountPositive(amount);
             PreventOverflow(amount + account.Balance);
             EnsureOwnership(account, owner);
-            Console.WriteLine(4);
 
             updateBalance(account, amount);
             BaseController.UpdateEntity(account);
