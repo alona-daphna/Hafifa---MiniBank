@@ -68,8 +68,8 @@ namespace MiniBank.Views
             {
                 try
                 {
-                    var (accountID, amount) = UpdateBalancePrompts();
-                    var balance = AccountController.Deposit(SessionManager.LoggedUser.Username, accountID, amount);
+                    var (accountIdLastFour, amount) = UpdateBalancePrompts();
+                    var balance = AccountController.Deposit(SessionManager.LoggedUser.Username, accountIdLastFour, amount);
                     ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance:0.00}");
                 } catch (ArgumentException ex)
                 {
@@ -85,8 +85,8 @@ namespace MiniBank.Views
             {
                 try
                 {
-                    var (account, amount) = UpdateBalancePrompts();
-                    var balance = AccountController.Withdraw(SessionManager.LoggedUser.Username, account, amount);
+                    var (accountIdLastFour, amount) = UpdateBalancePrompts();
+                    var balance = AccountController.Withdraw(SessionManager.LoggedUser.Username, accountIdLastFour, amount);
                     ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance:0.00}");
                 }
                 catch (ArgumentException ex)
@@ -102,14 +102,14 @@ namespace MiniBank.Views
 
         private (string, decimal) UpdateBalancePrompts()
         {
-            ColorWriter.DisplayPrimary("Enter account ID: ");
-            var accountID = Console.ReadLine();
-            if (string.IsNullOrEmpty(accountID)) throw new ArgumentException("Invalid account ID");
+            ColorWriter.DisplayPrimary("Enter last four digits of account ID: ");
+            var accountIdLastFour = Console.ReadLine();
+            if (string.IsNullOrEmpty(accountIdLastFour)) throw new ArgumentException("Invalid account ID");
 
             ColorWriter.DisplayPrimary("Enter amount: ");
             var amount = decimal.TryParse(Console.ReadLine(), out decimal value) ? value : throw new ArgumentException("Invalid amount.");
 
-            return (accountID, amount);
+            return (accountIdLastFour, amount);
         }
     }
 }

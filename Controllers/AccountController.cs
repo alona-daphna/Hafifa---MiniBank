@@ -105,25 +105,25 @@ namespace MiniBank.Controllers
             }
         }
 
-        internal decimal Deposit(string owner, string accountId, decimal amount)
+        internal decimal Deposit(string owner, string accountIdLastFour, decimal amount)
         {
             try
             {
-                return UpdateBalance(accountId, owner, amount, (account, amount) => account.Balance += amount, "Deposited");
+                return UpdateBalance(accountIdLastFour, owner, amount, (account, amount) => account.Balance += amount, "Deposited");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, owner);
+                Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountIdLastFour, owner);
 
                 throw;
             }
         }
 
-    internal decimal Withdraw(string owner, string accountId, decimal amount)
+    internal decimal Withdraw(string owner, string accountIdLastFour, decimal amount)
         { 
             try
             {
-                return UpdateBalance(accountId, owner, amount, (account, amount) => { 
+                return UpdateBalance(accountIdLastFour, owner, amount, (account, amount) => { 
                     if (account.GetType() == typeof(SimpleAccount) && account.Balance - amount < 0) 
                         throw new UnauthorizedOperationException("This account cannot be in overdraft"); 
                     account.Balance -= amount; 
@@ -131,27 +131,33 @@ namespace MiniBank.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, owner);
+                Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountIdLastFour, owner);
 
                 throw;
             }
         }
         
-        private decimal UpdateBalance(string accountId, string owner, decimal amount, Action<Account, decimal> updateBalance, string actionText)
+        private decimal UpdateBalance(string accountIdLastFour, string owner, decimal amount, Action<Account, decimal> updateBalance, string actionText)
         {
             using var session = NhibernateConfig.SessionFactory.OpenSession();
             using var transaction = session.BeginTransaction();
-            var account = session.Get<Account>(accountId) ?? throw new NotFoundException();
+            var account = session.Query<User>()
+                                 .Where(u => u.Username == owner)
+                                 .Fetch(u => u.Accounts)
+                                 .FirstOrDefault()
+                                 ?.Accounts.FirstOrDefault(a => a.ID.EndsWith(accountIdLastFour))
+                                 ?? throw new NotFoundException();
 
             EnsureAmountPositive(amount);
             PreventOverflow(amount + account.Balance);
             EnsureOwnership(account, owner);
+            Console.WriteLine(4);
 
             updateBalance(account, amount);
             session.Save(account);
             transaction.Commit();
 
-            Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, accountId, owner);
+            Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, account.ID, owner);
 
             return account.Balance;
         }
