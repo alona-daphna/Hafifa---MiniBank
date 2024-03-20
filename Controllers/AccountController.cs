@@ -15,16 +15,16 @@ namespace MiniBank.Controllers
 
         private decimal MaxBalance { get; set; } = 100000000000000;
 
-        internal List<Account> GetByOwnerId(string id)
+        internal List<Account> GetByOwner(string username)
         {
             try
             {
                 using (var session = NhibernateConfig.SessionFactory.OpenSession())
                 {
-                    var user = session.Query<User>().Where(u => u.ID == id).Fetch(u => u.Accounts).SingleOrDefault() ?? throw new NotFoundException("User not found");
+                    var user = session.Query<User>().Where(u => u.Username == username).Fetch(u => u.Accounts).SingleOrDefault() ?? throw new NotFoundException("User not found");
                     var accounts = user.Accounts;
 
-                    Logger.Information("user {id} retrieves accounts", id);
+                    Logger.Information("user: {username} retrieves accounts", username);
 
                     return [.. accounts];
                 }
@@ -54,7 +54,7 @@ namespace MiniBank.Controllers
             }
         }
 
-        internal void Delete(string ownerId, string accountId)
+        internal void Delete(string owner, string accountId)
         {
             try
             {
@@ -62,34 +62,34 @@ namespace MiniBank.Controllers
                 var transaction = session.BeginTransaction();
                 var account = session.Get<Account>(accountId) ?? throw new NotFoundException();
 
-                EnsureOwnership(account, ownerId);
+                EnsureOwnership(account, owner);
                 session.Delete(account);
                 transaction.Commit();
 
-                Logger.Information("account {accountId} got deleted by {ownerId}", accountId, ownerId);
+                Logger.Information("account {accountId} got deleted by {ownerId}", accountId, owner);
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in deleting account {accountId} owned by {ownerId}", accountId, ownerId);
+                Logger.Error(ex, "Error in deleting account {accountId} owned by {ownerId}", accountId, owner);
 
                 throw;
             }
         }
 
-        internal string Create(string ownerId, int type)
+        internal string Create(string username, int type)
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
                 using var transaction = session.BeginTransaction();
 
-                var owner = session.Get<User>(ownerId);
+                var owner = session.Get<User>(username);
                 var account = new AccountFactory().Create(type, owner);
 
                 session.Save(account);
                 transaction.Commit();
 
-                Logger.Information("Created account for user {ownerId}", ownerId);
+                Logger.Information("Created account for user: {username}", owner.Username);
 
                 return account.ID;
             } catch (SqlException ex)
@@ -99,31 +99,31 @@ namespace MiniBank.Controllers
                    throw new ForeignKeyConstraintException("Invalid account type.");
                 }
 
-                Logger.Error(ex, "Error in creating account of type {type} for user {ownerId}", type, ownerId);
+                Logger.Error(ex, "Error in creating account of type {type} for user: {usernamw}", type, username);
 
                 throw;
             }
         }
 
-        internal decimal Deposit(string ownerId, string accountId, decimal amount)
+        internal decimal Deposit(string owner, string accountId, decimal amount)
         {
             try
             {
-                return UpdateBalance(accountId, ownerId, amount, (account, amount) => account.Balance += amount, "Deposited");
+                return UpdateBalance(accountId, owner, amount, (account, amount) => account.Balance += amount, "Deposited");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, ownerId);
+                Logger.Error(ex, "Error in depositing to account {accountId} owned by {ownerId}", accountId, owner);
 
                 throw;
             }
         }
 
-    internal decimal Withdraw(string ownerId, string accountId, decimal amount)
+    internal decimal Withdraw(string owner, string accountId, decimal amount)
         { 
             try
             {
-                return UpdateBalance(accountId, ownerId, amount, (account, amount) => { 
+                return UpdateBalance(accountId, owner, amount, (account, amount) => { 
                     if (account.GetType() == typeof(SimpleAccount) && account.Balance - amount < 0) 
                         throw new UnauthorizedOperationException("This account cannot be in overdraft"); 
                     account.Balance -= amount; 
@@ -131,13 +131,13 @@ namespace MiniBank.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, ownerId);
+                Logger.Error(ex, "Error in withdrawing from account {accountId} owned by {ownerId}", accountId, owner);
 
                 throw;
             }
         }
         
-        private decimal UpdateBalance(string accountId, string ownerId, decimal amount, Action<Account, decimal> updateBalance, string actionText)
+        private decimal UpdateBalance(string accountId, string owner, decimal amount, Action<Account, decimal> updateBalance, string actionText)
         {
             using var session = NhibernateConfig.SessionFactory.OpenSession();
             using var transaction = session.BeginTransaction();
@@ -145,13 +145,13 @@ namespace MiniBank.Controllers
 
             EnsureAmountPositive(amount);
             PreventOverflow(amount + account.Balance);
-            EnsureOwnership(account, ownerId);
+            EnsureOwnership(account, owner);
 
             updateBalance(account, amount);
             session.Save(account);
             transaction.Commit();
 
-            Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, accountId, ownerId);
+            Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, accountId, owner);
 
             return account.Balance;
         }
@@ -169,9 +169,9 @@ namespace MiniBank.Controllers
             }
         }
 
-        private void EnsureOwnership(Account account, string ownerID)
+        private void EnsureOwnership(Account account, string username)
         {
-            if (ownerID != account.Owner.ID)
+            if (username != account.Owner.Username)
             {
                 throw new UnauthorizedAccessException("You don't own this account, operation is not authorized.");
             }

@@ -1,4 +1,5 @@
 ﻿using MiniBank.Controllers;
+using MiniBank.Exceptions;
 using MiniBank.Utils;
 using System.Drawing;
 
@@ -20,7 +21,7 @@ namespace MiniBank.Views
                 Console.WriteLine("No users exist in the bank.");
             }
             
-            users.ForEach(x => ColorWriter.DisplaySuccessMessage($"{x.ID} \t {x.Username}"));
+            users.ForEach(x => ColorWriter.DisplaySuccessMessage(x.Username));
         }
 
 
@@ -33,7 +34,7 @@ namespace MiniBank.Views
 
                 if (input == "y")
                 {
-                    UserController.Delete(SessionManager.LoggedUser.ID);
+                    UserController.Delete(SessionManager.LoggedUser.Username);
 
                     SessionManager.Authenticate();
                     ColorWriter.DisplaySuccessMessage("User deleted successfully.");
@@ -48,7 +49,8 @@ namespace MiniBank.Views
         {
             var passwordManager = new PasswordManager();
 
-            var name = ColorWriter.GetValidInputString("Enter your name: ");
+            var username = ColorWriter.GetValidInputString("Create a username: ");
+            EnsureUniqueUsername(username);
 
             ColorWriter.DisplayPrimary("Create a password: ");
             var password = passwordManager.GetPasswordInput();
@@ -63,9 +65,23 @@ namespace MiniBank.Views
 
             var hashedPassword = passwordManager.HashPassword(password);
 
-            var id = UserController.Create(name, hashedPassword);
+            UserController.Create(username, hashedPassword);
 
-            ColorWriter.DisplaySuccessMessage($"User created successfully. Your ID is: {id}");
+            ColorWriter.DisplaySuccessMessage($"User created successfully.");
+        }
+
+        private void EnsureUniqueUsername(string username)
+        {
+            try
+            {
+                var user = UserController.GetByUsername(username);
+
+                throw new UserAlreadyExistsException($"Username is taken.");
+            }
+            catch (NotFoundException)
+            {
+                return;
+            }
         }
     }
 }

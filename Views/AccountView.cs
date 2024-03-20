@@ -15,7 +15,7 @@ namespace MiniBank.Views
         {
             SessionManager.Authorize(() =>
             {
-                var accounts = AccountController.GetByOwnerId(SessionManager.LoggedUser.ID);
+                var accounts = AccountController.GetByOwner(SessionManager.LoggedUser.Username);
 
                 if (accounts.Count == 0)
                 {
@@ -37,7 +37,7 @@ namespace MiniBank.Views
 
                 if (int.TryParse(accountType, out var type)) 
                 {
-                    var id = AccountController.Create(SessionManager.LoggedUser.ID, type);
+                    var id = AccountController.Create(SessionManager.LoggedUser.Username, type);
 
                     ColorWriter.DisplaySuccessMessage($"Account created successfully. Your new account ID is {id}");
                 } else
@@ -55,7 +55,7 @@ namespace MiniBank.Views
                 ColorWriter.DisplayPrimary("Enter account ID: ");
                 var accountID = Console.ReadLine();
 
-                AccountController.Delete(SessionManager.LoggedUser.ID, accountID);
+                AccountController.Delete(SessionManager.LoggedUser.Username, accountID);
 
                 ColorWriter.DisplaySuccessMessage("Account deleted successfully.");
             });
@@ -69,7 +69,7 @@ namespace MiniBank.Views
                 try
                 {
                     var (accountID, amount) = UpdateBalancePrompts();
-                    var balance = AccountController.Deposit(SessionManager.LoggedUser.ID, accountID, amount);
+                    var balance = AccountController.Deposit(SessionManager.LoggedUser.Username, accountID, amount);
                     ColorWriter.DisplaySuccessMessage($"Successful deposit. Your current balance is {balance:0.00}");
                 } catch (ArgumentException ex)
                 {
@@ -86,7 +86,7 @@ namespace MiniBank.Views
                 try
                 {
                     var (account, amount) = UpdateBalancePrompts();
-                    var balance = AccountController.Withdraw(SessionManager.LoggedUser.ID, account, amount);
+                    var balance = AccountController.Withdraw(SessionManager.LoggedUser.Username, account, amount);
                     ColorWriter.DisplaySuccessMessage($"Successful withdraw. Your current balance is {balance:0.00}");
                 }
                 catch (ArgumentException ex)

@@ -40,20 +40,20 @@ namespace MiniBank.Utils
         { 
             var passwordManager = new PasswordManager();
             
-            var userID = ColorWriter.GetValidInputString("Enter User ID: ");
+            var username = ColorWriter.GetValidInputString("Enter username: ");
 
-            var user = new UserController().GetByID(userID);
+            var user = new UserController().GetByUsername(username);
 
-            ColorWriter.DisplayPrimary("Enter your password: ");
+            ColorWriter.DisplayPrimary("Enter password: ");
             var password = passwordManager.GetPasswordInput();
 
             if (passwordManager.VerifyPassword(password, user.Password))
             {
                 LoggedUser = user;
-                Logger.Information("User {id} logged in", user.ID);
+                Logger.Information("User: {username} logged in", user.Username);
             } else
             {
-                Logger.Information("Failed login attempt for user {id}", user.ID);
+                Logger.Information("Failed login attempt for user: {username}", user.Username);
                 ColorWriter.DisplayErrorMessage("Incorrect password.");
             }
         }
@@ -61,7 +61,7 @@ namespace MiniBank.Utils
 
         private void LogOut()
         {
-            Logger.Information("User {id} logged out", LoggedUser.ID);
+            Logger.Information("User: {username} logged out", LoggedUser.Username);
             LoggedUser = null;
         }
     }

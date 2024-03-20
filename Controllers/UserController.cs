@@ -11,7 +11,7 @@ namespace MiniBank.Controllers
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
 
-        internal string Create(string username, string password) 
+        internal void Create(string username, string password) 
         {
             try
             {
@@ -21,9 +21,7 @@ namespace MiniBank.Controllers
                 session.Save(user);
                 transaction.Commit();
 
-                Logger.Information("Created a new user with ID {id}", user.ID);
-
-                return user.ID;
+                Logger.Information("Created a new user: {username}", user.Username);
             }
             catch (Exception ex)
             {
@@ -33,22 +31,22 @@ namespace MiniBank.Controllers
             }
         }
 
-        internal void Delete(string id) 
+        internal void Delete(string username) 
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
                 var transaction = session.BeginTransaction();
-                var user = GetByID(id);
+                var user = GetByUsername(username);
 
                 session.Delete(user);
                 transaction.Commit();
 
-                Logger.Information("Deleted user with ID {id}", id);
+                Logger.Information("Deleted user: {username}", username);
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error in deleting user with ID {id}", id);
+                Logger.Error(ex, "Error in deleting user: {username}", username);
 
                 throw;
             }
@@ -72,18 +70,18 @@ namespace MiniBank.Controllers
         }
 
 
-        internal User GetByID(string id) 
+        internal User GetByUsername(string username) 
         {
             try
             {
                 using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var user = session.Get<User?>(id) ?? throw new NotFoundException("User not found");
+                var user = session.Get<User?>(username) ?? throw new NotFoundException("User not found");
 
                 return user;
 
             } catch (Exception ex)
             {
-                Logger.Error(ex, "Error in retrieving user with ID {id}", id);
+                Logger.Error(ex, "Error in retrieving user with username {username}", username);
 
                 throw;
             }
