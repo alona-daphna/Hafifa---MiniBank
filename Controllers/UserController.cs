@@ -10,16 +10,14 @@ namespace MiniBank.Controllers
     {
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
+        private BaseController BaseController { get; set; } = new BaseController();
 
         internal void Create(string username, string password) 
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                using var transaction = session.BeginTransaction();
                 var user = new User(username, password);
-                session.Save(user);
-                transaction.Commit();
+                BaseController.SaveEntity(user);
 
                 Logger.Information("Created a new user: {username}", user.Username);
             }
@@ -35,12 +33,7 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var transaction = session.BeginTransaction();
-                var user = GetByUsername(username);
-
-                session.Delete(user);
-                transaction.Commit();
+                BaseController.DeleteEntity<User>(username);
 
                 Logger.Information("Deleted user: {username}", username);
             }
@@ -56,10 +49,7 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var users = session.Query<User>().ToList();
-
-                return users;
+                return BaseController.GetAll<User>();
             }
             catch (Exception ex)
             {
@@ -74,11 +64,8 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var user = session.Get<User?>(username) ?? throw new NotFoundException("User not found");
-
-                return user;
-
+                return BaseController.GetEntityByIdentifier<User>(username) 
+                    ?? throw new NotFoundException("User not found");
             } catch (Exception ex)
             {
                 Logger.Error(ex, "Error in retrieving user with username {username}", username);

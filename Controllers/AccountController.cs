@@ -12,6 +12,7 @@ namespace MiniBank.Controllers
     {
         private ILogger Logger { get; set; } = MiniBankLogger.GetInstance().Logger;
         private NhibernateConfig NhibernateConfig { get; set; } = NhibernateConfig.GetInstance();
+        private BaseController BaseController { get; set; } = new BaseController();
 
         private decimal MaxBalance { get; set; } = 100000000000000;
 
@@ -19,15 +20,12 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using (var session = NhibernateConfig.SessionFactory.OpenSession())
-                {
-                    var user = session.Query<User>().Where(u => u.Username == username).Fetch(u => u.Accounts).SingleOrDefault() ?? throw new NotFoundException("User not found");
-                    var accounts = user.Accounts;
+                var user = BaseController.GetByPredicateEagerlyLoad<User>(u => u.Username == username, u => u.Accounts).SingleOrDefault() ?? throw new NotFoundException("User not found");
+                var accounts = user.Accounts;
 
-                    Logger.Information("user: {username} retrieves accounts", username);
+                Logger.Information("user: {username} retrieves accounts", username);
 
-                    return [.. accounts];
-                }
+                return [.. accounts];
             }
             catch (Exception ex)
             {
@@ -41,10 +39,7 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var account = session.Get<Account>(id);
-
-                return account ?? throw new NotFoundException("Account not found");
+                return BaseController.GetEntityByIdentifier<Account>(id) ?? throw new NotFoundException("Account not found");
             }
             catch (Exception ex)
             {
@@ -58,13 +53,9 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                var transaction = session.BeginTransaction();
-                var account = session.Get<Account>(accountId) ?? throw new NotFoundException();
-
+                var account = BaseController.GetEntityByIdentifier<Account>(accountId) ?? throw new NotFoundException();
                 EnsureOwnership(account, owner);
-                session.Delete(account);
-                transaction.Commit();
+                BaseController.DeleteEntity<Account>(accountId);
 
                 Logger.Information("account {accountId} got deleted by {ownerId}", accountId, owner);
             }
@@ -80,14 +71,9 @@ namespace MiniBank.Controllers
         {
             try
             {
-                using var session = NhibernateConfig.SessionFactory.OpenSession();
-                using var transaction = session.BeginTransaction();
-
-                var owner = session.Get<User>(username);
+                var owner = BaseController.GetEntityByIdentifier<User>(username);
                 var account = new AccountFactory().Create(type, owner);
-
-                session.Save(account);
-                transaction.Commit();
+                BaseController.SaveEntity(account);
 
                 Logger.Information("Created account for user: {username}", owner.Username);
 
@@ -139,14 +125,10 @@ namespace MiniBank.Controllers
         
         private decimal UpdateBalance(string accountIdLastFour, string owner, decimal amount, Action<Account, decimal> updateBalance, string actionText)
         {
-            using var session = NhibernateConfig.SessionFactory.OpenSession();
-            using var transaction = session.BeginTransaction();
-            var account = session.Query<User>()
-                                 .Where(u => u.Username == owner)
-                                 .Fetch(u => u.Accounts)
-                                 .FirstOrDefault()
-                                 ?.Accounts.FirstOrDefault(a => a.ID.EndsWith(accountIdLastFour))
-                                 ?? throw new NotFoundException();
+
+            var user = BaseController.GetByPredicateEagerlyLoad<User>(user => user.Username == owner, user => user.Accounts).FirstOrDefault();
+            Console.WriteLine(user.Username);
+            var account = user.Accounts.FirstOrDefault(a => a.ID.EndsWith(accountIdLastFour)) ?? throw new NotFoundException();
 
             EnsureAmountPositive(amount);
             PreventOverflow(amount + account.Balance);
@@ -154,8 +136,7 @@ namespace MiniBank.Controllers
             Console.WriteLine(4);
 
             updateBalance(account, amount);
-            session.Save(account);
-            transaction.Commit();
+            BaseController.UpdateEntity(account);
 
             Logger.Information("{action} {amount} account {accountId} owned by {ownerId}", actionText, amount, account.ID, owner);
 
